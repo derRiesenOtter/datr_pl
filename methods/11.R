@@ -5,6 +5,7 @@ library(edgeR)
 library(ggplot2)
 library(ggVennDiagram)
 library(tidyr)
+library(limma)
 
 # map transcripts to genes
 
@@ -163,7 +164,7 @@ create_tpm_column_and_merge <- function(files, condition, tbl = edgeR_table) {
       str_match(df$target_id, "(.*)_.*")[, 2]
     )
     names(df)[[1]] <- "gene_id"
-    names(df)[[2]] <- paste("TPM-REPL-", i, "-", condition)
+    names(df)[[2]] <- paste0("TPM-Repl-", i, "-", condition)
     tbl <- merge(tbl, df, by = "gene_id")
   }
   return(tbl)
@@ -393,6 +394,323 @@ p <- ggplot(abundance_long, aes(
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ggsave("../results/top_negative_genes_expression_by_condition2.png",
+  plot = p,
+  width = 10, height = 8, dpi = 300
+)
+
+# limma
+
+dge <- DGEList(counts = counts)
+
+keep <- filterByExpr(dge, design)
+dge <- dge[keep, , keep.lib.sizes = FALSE]
+
+dge <- calcNormFactors(dge)
+
+png("../results/voom_plot1.png")
+v <- voom(dge, design, plot = TRUE)
+dev.off()
+
+fit <- lmFit(v, design)
+fit <- eBayes(fit)
+control_vs_condition1_voom <- topTable(fit, coef = 2, number = Inf)
+write.csv(control_vs_condition1_voom, "../results/control_vs_condition1_voom.csv")
+
+fit <- lmFit(v, design)
+fit <- eBayes(fit)
+control_vs_condition2_voom <- topTable(fit, coef = 3, number = Inf)
+write.csv(control_vs_condition2_voom, "../results/control_vs_condition2_voom.csv")
+
+# volcano plots lima
+
+limma_volcano_con1 <- ggplot(data = control_vs_condition1_voom, aes(x = logFC, y = -log10(P.Value))) +
+  geom_point() +
+  theme_minimal() +
+  labs(
+    x = "logFC",
+    y = "-log10(PValue)",
+    color = "Significance"
+  )
+ggsave("limma_volcano_con1.pdf", plot = limma_volcano_con1, device = "pdf", path = "../results")
+
+limma_volcano_con2 <- ggplot(data = control_vs_condition2_voom, aes(x = logFC, y = -log10(P.Value))) +
+  geom_point() +
+  theme_minimal() +
+  labs(
+    x = "logFC",
+    y = "-log10(PValue)",
+    color = "Significance"
+  )
+ggsave("limma_volcano_con2.pdf", plot = limma_volcano_con2, device = "pdf", path = "../results")
+
+# venn diagrams limma
+
+head(control_vs_condition1_voom)
+
+# TODO where is the FDR value
+
+lfc_ge_2_cn1 <- row.names(control_vs_condition1_voom[abs(control_vs_condition1_voom$logFC) >= 2, ])
+fdr_ad_p_le_0.05_cn1 <- row.names(control_vs_condition1_voom[control_vs_condition1_voom$adj.P.Val <= 0.05, ])
+fdr_le_0.01_cn1 <- row.names(control_vs_condition1_voom[control_vs_condition1_voom$FDR <= 0.01, ])
+
+deg_list_cn1 <- list(
+  LFC_greater_2 = lfc_ge_2_cn1,
+  FDR_ad_p_value = fdr_ad_p_le_0.05_cn1,
+  FDR_less_than_0.01 = fdr_le_0.01_cn1
+)
+
+limma_venn_diagram_cn1 <- ggVennDiagram(deg_list_cn1) +
+  scale_fill_gradient(low = "white", high = "blue") +
+  theme_minimal()
+ggsave("../results/limma_venn_diagram_cn1.pdf", plot = limma_venn_diagram_cn1, device = "pdf")
+
+# increased and decreased genes
+
+limma_res_cond1_inc <- row.names(control_vs_condition1_voom[control_vs_condition1_voom$logFC > 0, ])
+limma_res_cond1_dec <- row.names(control_vs_condition1_voom[control_vs_condition1_voom$logFC < 0, ])
+
+limma_res_cond2_inc <- row.names(control_vs_condition2_voom[control_vs_condition2_voom$logFC > 0, ])
+limma_res_cond2_dec <- row.names(control_vs_condition2_voom[control_vs_condition2_voom$logFC < 0, ])
+
+# top 20 differentially expressed geens
+head(control_vs_condition1_voom[order(abs(control_vs_condition1_voom$logFC), decreasing = TRUE), ], 20)
+head(control_vs_condition2_voom[order(abs(control_vs_condition2_voom$logFC), decreasing = TRUE), ], 20)
+
+# table limma
+
+limma_table <- edgeR_table[, c(
+  "gene_id",
+  "TPM-Repl-1-Control",
+  "TPM-Repl-2-Control",
+  "TPM-Repl-3-Control",
+  "TPM-Repl-1-Condition1",
+  "TPM-Repl-2-Condition1",
+  "TPM-Repl-3-Condition1",
+  "TPM-Repl-1-Condition2",
+  "TPM-Repl-2-Condition2",
+  "TPM-Repl-3-Condition2"
+)]
+
+control_vs_condition1_voom$gene_id <- row.names(control_vs_condition1_voom)
+limma_table <- merge(limma_table, control_vs_condition1_voom[, c("gene_id", "logFC")], by = "gene_id")
+names(limma_table)[[11]] <- "logFC-Control-vs-Condition1"
+
+control_vs_condition2_voom$gene_id <- row.names(control_vs_condition2_voom)
+limma_table <- merge(limma_table, control_vs_condition2_voom[, c("gene_id", "logFC")], by = "gene_id")
+names(limma_table)[[12]] <- "logFC-Control-vs-Condition2"
+
+head(limma_table)
+
+# TODO Adjusted p-values are missing
+
+# grouped barcharts limma
+
+top_genes_table <- control_vs_condition1_voom
+top_positive <- top_genes_table[top_genes_table$logFC > 0, ]
+top_negative <- top_genes_table[top_genes_table$logFC < 0, ]
+top_positive_sorted <- top_positive[order(top_positive$logFC,
+  decreasing = TRUE
+), ]
+top_negative_sorted <- top_negative[order(top_negative$logFC), ]
+top_positive_3 <- head(top_positive_sorted, 3)
+top_negative_3 <- head(top_negative_sorted, 3)
+print("Top 3 Positive Genes:")
+print(top_positive_3)
+print("Top 3 Negative Genes:")
+print(top_negative_3)
+
+# condition1 positive
+
+top3_genes <- rownames(top_positive_3)
+ab_comb <- cbind(
+  txi_control$abundance[top3_genes, ],
+  txi_condition1$abundance[top3_genes, ]
+)
+colnames(ab_comb) <- c(
+  "control_rep1", "control_rep2", "control_rep3",
+  "condition1_rep1", "condition1_rep2", "condition1_rep3"
+)
+abundance_long <- as.data.frame(ab_comb)
+abundance_long$GeneID <- rownames(abundance_long)
+abundance_long <- abundance_long %>%
+  pivot_longer(
+    cols = -GeneID,
+    names_to = "Condition_Replicate",
+    values_to = "Expression"
+  )
+abundance_long$Condition <- gsub(
+  "_.*", "",
+  abundance_long$Condition_Replicate
+)
+abundance_long$Replicate <- gsub(
+  ".*_", "",
+  abundance_long$Condition_Replicate
+)
+
+p <- ggplot(abundance_long, aes(
+  x = Condition, y = Expression,
+  fill = Replicate
+)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  facet_wrap(~GeneID) +
+  labs(
+    title = "Top Genes Expression by Condition",
+    x = "Condition",
+    y = "Normalized Expression"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+ggsave("../results/top_positive_genes_expression_by_condition1_limma.png",
+  plot = p,
+  width = 10, height = 8, dpi = 300
+)
+# conditon1 negative
+
+top3_genes <- rownames(top_negative_3)
+ab_comb <- cbind(
+  txi_control$abundance[top3_genes, ],
+  txi_condition1$abundance[top3_genes, ]
+)
+colnames(ab_comb) <- c(
+  "control_rep1", "control_rep2", "control_rep3",
+  "condition1_rep1", "condition1_rep2", "condition1_rep3"
+)
+abundance_long <- as.data.frame(ab_comb)
+abundance_long$GeneID <- rownames(abundance_long)
+abundance_long <- abundance_long %>%
+  pivot_longer(
+    cols = -GeneID,
+    names_to = "Condition_Replicate",
+    values_to = "Expression"
+  )
+abundance_long$Condition <- gsub(
+  "_.*", "",
+  abundance_long$Condition_Replicate
+)
+abundance_long$Replicate <- gsub(
+  ".*_", "",
+  abundance_long$Condition_Replicate
+)
+
+p <- ggplot(abundance_long, aes(
+  x = Condition, y = Expression,
+  fill = Replicate
+)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  facet_wrap(~GeneID) +
+  labs(
+    title = "Top Genes Expression by Condition",
+    x = "Condition",
+    y = "Normalized Expression"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+ggsave("../results/top_negative_genes_expression_by_condition1_limma.png",
+  plot = p,
+  width = 10, height = 8, dpi = 300
+)
+
+# condition2 top_positive
+
+top_genes_table <- control_vs_condition2_voom
+top_positive <- top_genes_table[top_genes_table$logFC > 0, ]
+top_negative <- top_genes_table[top_genes_table$logFC < 0, ]
+top_positive_sorted <- top_positive[order(top_positive$logFC,
+  decreasing = TRUE
+), ]
+top_negative_sorted <- top_negative[order(top_negative$logFC), ]
+top_positive_3 <- head(top_positive_sorted, 3)
+top_negative_3 <- head(top_negative_sorted, 3)
+print("Top 3 Positive Genes:")
+print(top_positive_3)
+print("Top 3 Negative Genes:")
+print(top_negative_3)
+
+top3_genes <- rownames(top_positive_3)
+ab_comb <- cbind(
+  txi_control$abundance[top3_genes, ],
+  txi_condition1$abundance[top3_genes, ]
+)
+colnames(ab_comb) <- c(
+  "control_rep1", "control_rep2", "control_rep3",
+  "condition1_rep1", "condition1_rep2", "condition1_rep3"
+)
+abundance_long <- as.data.frame(ab_comb)
+abundance_long$GeneID <- rownames(abundance_long)
+abundance_long <- abundance_long %>%
+  pivot_longer(
+    cols = -GeneID,
+    names_to = "Condition_Replicate",
+    values_to = "Expression"
+  )
+abundance_long$Condition <- gsub(
+  "_.*", "",
+  abundance_long$Condition_Replicate
+)
+abundance_long$Replicate <- gsub(
+  ".*_", "",
+  abundance_long$Condition_Replicate
+)
+
+p <- ggplot(abundance_long, aes(
+  x = Condition, y = Expression,
+  fill = Replicate
+)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  facet_wrap(~GeneID) +
+  labs(
+    title = "Top Genes Expression by Condition",
+    x = "Condition",
+    y = "Normalized Expression"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+ggsave("../results/top_positive_genes_expression_by_condition2_limma.png",
+  plot = p,
+  width = 10, height = 8, dpi = 300
+)
+# conditon2 negative
+
+top3_genes <- rownames(top_negative_3)
+ab_comb <- cbind(
+  txi_control$abundance[top3_genes, ],
+  txi_condition1$abundance[top3_genes, ]
+)
+colnames(ab_comb) <- c(
+  "control_rep1", "control_rep2", "control_rep3",
+  "condition1_rep1", "condition1_rep2", "condition1_rep3"
+)
+abundance_long <- as.data.frame(ab_comb)
+abundance_long$GeneID <- rownames(abundance_long)
+abundance_long <- abundance_long %>%
+  pivot_longer(
+    cols = -GeneID,
+    names_to = "Condition_Replicate",
+    values_to = "Expression"
+  )
+abundance_long$Condition <- gsub(
+  "_.*", "",
+  abundance_long$Condition_Replicate
+)
+abundance_long$Replicate <- gsub(
+  ".*_", "",
+  abundance_long$Condition_Replicate
+)
+
+p <- ggplot(abundance_long, aes(
+  x = Condition, y = Expression,
+  fill = Replicate
+)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  facet_wrap(~GeneID) +
+  labs(
+    title = "Top Genes Expression by Condition",
+    x = "Condition",
+    y = "Normalized Expression"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+ggsave("../results/top_negative_genes_expression_by_condition2_limma.png",
   plot = p,
   width = 10, height = 8, dpi = 300
 )
