@@ -4,38 +4,15 @@ library(dplyr)
 library(edgeR)
 library(ggplot2)
 library(ggVennDiagram)
+library(tidyr)
 
-# create tx2gene file
-
-gff <- read.delim("../material/reference.gff", header = FALSE, skip = 21)
-
-gff[length(gff), ]
-
-gff_genes <- gff[gff[[3]] == "gene", 9]
-gff_mrna <- gff[gff[[3]] == "mRNA", 9]
-
-get_id <- function(txt) {
-  str_match(txt, "ID=(.*);Name.*")[, 2]
-}
-
-transcript_ids <- as.data.frame(get_id(gff_mrna))
-gene_ids <- as.data.frame(get_id(gff_genes))
-
-transcript_ids$gene_id <- str_match(transcript_ids[, 1], "(.*)_.*")[, 2]
-
-names(gene_ids)[[1]] <- "gene_id"
-
-tx2gene <- merge(transcript_ids, gene_ids, by = "gene_id", all = TRUE)
-names(tx2gene)[[2]] <- "transcript_id"
-tx2gene <- tx2gene[, c(2, 1)]
-
-head(tx2gene)
-
-# read abundance files
+# map transcripts to genes
 
 control_files <- list.files(path = "../results/control", pattern = "tsv$", recursive = TRUE, full.names = TRUE)
 condition1_files <- list.files(path = "../results/condition1", pattern = "tsv$", recursive = TRUE, full.names = TRUE)
 condition2_files <- list.files(path = "../results/condition2", pattern = "tsv$", recursive = TRUE, full.names = TRUE)
+
+tx2gene <- read.table("../results/tx2gene", header = FALSE)
 
 txi_control <- tximport(control_files,
   type = "kallisto", tx2gene = tx2gene,
@@ -83,16 +60,20 @@ test_control_vs_cond1 <- glmQLFTest(fit, contrast = c(-1, 1, 0))
 results_control_vs_cond1 <- topTags(test_control_vs_cond1, n = Inf)
 write.csv(results_control_vs_cond1, "../results/control_vs_condition1_results.csv")
 
+test_control_vs_cond2 <- glmQLFTest(fit, contrast = c(-1, 0, 1))
+results_control_vs_cond2 <- topTags(test_control_vs_cond2, n = Inf)
+write.csv(results_control_vs_cond2, "../results/control_vs_condition2_results.csv")
+
+# results
+
+## volcano plots
+
 res_cond1 <- results_control_vs_cond1$table
 res_cond1$sig <- ifelse(
   res_cond1$FDR < 0.05,
   "Significant",
   "Not Significant"
 )
-
-test_control_vs_cond2 <- glmQLFTest(fit, contrast = c(-1, 0, 1))
-results_control_vs_cond2 <- topTags(test_control_vs_cond2, n = Inf)
-write.csv(results_control_vs_cond2, "../results/control_vs_condition2_results.csv")
 
 res_cond2 <- results_control_vs_cond2$table
 res_cond2$sig <- ifelse(
@@ -101,15 +82,7 @@ res_cond2$sig <- ifelse(
   "Not Significant"
 )
 
-summ_table <- data.frame(
-  gene_id = sort(row.names(res_cond1))
-)
-
-merge(tx2gene, read.delim(control_files[[1]]), by.x = "gene_id", by.y = "target_id", all = TRUE)
-
-head(summ_table)
-
-volcano_con1 <- ggplot(data = res_cond1, aes(x = logFC, y = -log10(PValue), color = sig)) +
+edgeR_volcano_con1 <- ggplot(data = res_cond1, aes(x = logFC, y = -log10(PValue), color = sig)) +
   geom_point() +
   scale_color_manual(values = c("Not Significant" = "grey", "Significant" = "red")) +
   theme_minimal() +
@@ -118,8 +91,9 @@ volcano_con1 <- ggplot(data = res_cond1, aes(x = logFC, y = -log10(PValue), colo
     y = "-log10(PValue)",
     color = "Significance"
   )
+ggsave("edgeR_volcano_con1.pdf", plot = edgeR_volcano_con1, device = "pdf", path = "../results")
 
-volcano_con2 <- ggplot(data = res_cond2, aes(x = logFC, y = -log10(PValue), color = sig)) +
+edgeR_volcano_con2 <- ggplot(data = res_cond2, aes(x = logFC, y = -log10(PValue), color = sig)) +
   geom_point() +
   scale_color_manual(values = c("Not Significant" = "grey", "Significant" = "red")) +
   theme_minimal() +
@@ -128,11 +102,9 @@ volcano_con2 <- ggplot(data = res_cond2, aes(x = logFC, y = -log10(PValue), colo
     y = expression(-log[10](PValue)),
     color = "Significance"
   )
+ggsave("edgeR_volcano_con2.pdf", plot = edgeR_volcano_con2, device = "pdf", path = "../results")
 
-ggsave("volcano_con1.pdf", plot = volcano_con1, device = "pdf", path = "../results")
-ggsave("volcano_con2.pdf", plot = volcano_con2, device = "pdf", path = "../results")
-
-# venn diagram
+# venn diagrams
 
 lfc_ge_2_cn1 <- row.names(res_cond1[abs(res_cond1$logFC) >= 2, ])
 fdr_ad_p_le_0.05_cn1 <- row.names(res_cond1[p.adjust(res_cond1$FDR, "BH") <= 0.05, ])
@@ -144,9 +116,10 @@ deg_list_cn1 <- list(
   FDR_less_than_0.01 = fdr_le_0.01_cn1
 )
 
-ggVennDiagram(deg_list_cn1) +
+edgeR_venn_diagram_cn1 <- ggVennDiagram(deg_list_cn1) +
   scale_fill_gradient(low = "white", high = "blue") +
   theme_minimal()
+ggsave("../results/edgeR_venn_diagram_cn1.pdf", plot = edgeR_venn_diagram_cn1, device = "pdf")
 
 lfc_ge_2_cn2 <- row.names(res_cond1[abs(res_cond2$logFC) >= 2, ])
 fdr_ad_p_le_0.05_cn2 <- row.names(res_cond2[p.adjust(res_cond1$FDR, "BH") <= 0.05, ])
@@ -158,22 +131,268 @@ deg_list_cn2 <- list(
   FDR_less_than_0.01 = fdr_le_0.01_cn2
 )
 
-ggVennDiagram(deg_list_cn2) +
+edgeR_venn_diagram_cn2 <- ggVennDiagram(deg_list_cn2) +
   scale_fill_gradient(low = "white", high = "blue") +
   theme_minimal()
+ggsave("../results/edgeR_venn_diagram_cn2.pdf", plot = edgeR_venn_diagram_cn2, device = "pdf")
 
-res_cond1_inc <- row.names(res_cond1[res_cond1$logFC > 0, ])
-res_cond1_dec <- row.names(res_cond1[res_cond1$logFC < 0, ])
+# increased and decreased genes
 
-res_cond2_inc <- row.names(res_cond1[res_cond2$logFC > 0, ])
-res_cond2_dec <- row.names(res_cond1[res_cond2$logFC < 0, ])
+edgeR_res_cond1_inc <- row.names(res_cond1[res_cond1$logFC > 0, ])
+edgeR_res_cond1_dec <- row.names(res_cond1[res_cond1$logFC < 0, ])
+
+edgeR_res_cond2_inc <- row.names(res_cond1[res_cond2$logFC > 0, ])
+edgeR_res_cond2_dec <- row.names(res_cond1[res_cond2$logFC < 0, ])
 
 # top 20 differentially expressed geens
 head(res_cond1[order(abs(res_cond1$logFC), decreasing = TRUE), ], 20)
 head(res_cond2[order(abs(res_cond2$logFC), decreasing = TRUE), ], 20)
 
-head(res_cond1)
+# table
 
-# sdeg <- data.frame(
-#   gene_id <-
-# )
+edgeR_table <- data.frame(
+  gene_id = sort(row.names(res_cond1))
+)
+
+create_tpm_column_and_merge <- function(files, condition, tbl = edgeR_table) {
+  for (i in seq_along(files)) {
+    df <- read.delim(files[[i]])[, c("target_id", "tpm")]
+    df$target_id <- ifelse(
+      is.na(str_match(df$target_id, "(.*)_.*")[, 2]),
+      df$target_id,
+      str_match(df$target_id, "(.*)_.*")[, 2]
+    )
+    names(df)[[1]] <- "gene_id"
+    names(df)[[2]] <- paste("TPM-REPL-", i, "-", condition)
+    tbl <- merge(tbl, df, by = "gene_id")
+  }
+  return(tbl)
+}
+
+edgeR_table <- create_tpm_column_and_merge(control_files, "Control")
+edgeR_table <- create_tpm_column_and_merge(condition1_files, "Condition1")
+edgeR_table <- create_tpm_column_and_merge(condition2_files, "Condition2")
+
+res_cond1$gene_id <- row.names(res_cond1)
+edgeR_table <- merge(edgeR_table, res_cond1[, c("gene_id", "logFC")], by = "gene_id")
+names(edgeR_table)[[11]] <- "logFC-Control-vs-Condition1"
+
+res_cond2$gene_id <- row.names(res_cond2)
+edgeR_table <- merge(edgeR_table, res_cond2[, c("gene_id", "logFC")], by = "gene_id")
+names(edgeR_table)[[12]] <- "logFC-Control-vs-Condition2"
+
+# TODO Adjusted p-values are missing
+
+# head(edgeR_table)
+
+# grouped barchart
+
+top_genes_table <- results_control_vs_cond1$table
+top_positive <- top_genes_table[top_genes_table$logFC > 0, ]
+top_negative <- top_genes_table[top_genes_table$logFC < 0, ]
+top_positive_sorted <- top_positive[order(top_positive$logFC,
+  decreasing = TRUE
+), ]
+top_negative_sorted <- top_negative[order(top_negative$logFC), ]
+top_positive_3 <- head(top_positive_sorted, 3)
+top_negative_3 <- head(top_negative_sorted, 3)
+print("Top 3 Positive Genes:")
+print(top_positive_3)
+print("Top 3 Negative Genes:")
+print(top_negative_3)
+
+# condition1 positive
+
+top3_genes <- rownames(top_positive_3)
+ab_comb <- cbind(
+  txi_control$abundance[top3_genes, ],
+  txi_condition1$abundance[top3_genes, ]
+)
+colnames(ab_comb) <- c(
+  "control_rep1", "control_rep2", "control_rep3",
+  "condition1_rep1", "condition1_rep2", "condition1_rep3"
+)
+abundance_long <- as.data.frame(ab_comb)
+abundance_long$GeneID <- rownames(abundance_long)
+abundance_long <- abundance_long %>%
+  pivot_longer(
+    cols = -GeneID,
+    names_to = "Condition_Replicate",
+    values_to = "Expression"
+  )
+abundance_long$Condition <- gsub(
+  "_.*", "",
+  abundance_long$Condition_Replicate
+)
+abundance_long$Replicate <- gsub(
+  ".*_", "",
+  abundance_long$Condition_Replicate
+)
+
+p <- ggplot(abundance_long, aes(
+  x = Condition, y = Expression,
+  fill = Replicate
+)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  facet_wrap(~GeneID) +
+  labs(
+    title = "Top Genes Expression by Condition",
+    x = "Condition",
+    y = "Normalized Expression"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+ggsave("../results/top_positive_genes_expression_by_condition1.png",
+  plot = p,
+  width = 10, height = 8, dpi = 300
+)
+# conditon1 negative
+
+top3_genes <- rownames(top_negative_3)
+ab_comb <- cbind(
+  txi_control$abundance[top3_genes, ],
+  txi_condition1$abundance[top3_genes, ]
+)
+colnames(ab_comb) <- c(
+  "control_rep1", "control_rep2", "control_rep3",
+  "condition1_rep1", "condition1_rep2", "condition1_rep3"
+)
+abundance_long <- as.data.frame(ab_comb)
+abundance_long$GeneID <- rownames(abundance_long)
+abundance_long <- abundance_long %>%
+  pivot_longer(
+    cols = -GeneID,
+    names_to = "Condition_Replicate",
+    values_to = "Expression"
+  )
+abundance_long$Condition <- gsub(
+  "_.*", "",
+  abundance_long$Condition_Replicate
+)
+abundance_long$Replicate <- gsub(
+  ".*_", "",
+  abundance_long$Condition_Replicate
+)
+
+p <- ggplot(abundance_long, aes(
+  x = Condition, y = Expression,
+  fill = Replicate
+)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  facet_wrap(~GeneID) +
+  labs(
+    title = "Top Genes Expression by Condition",
+    x = "Condition",
+    y = "Normalized Expression"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+ggsave("../results/top_negative_genes_expression_by_condition1.png",
+  plot = p,
+  width = 10, height = 8, dpi = 300
+)
+
+# condition2 top_positive
+
+top_genes_table <- results_control_vs_cond2$table
+top_positive <- top_genes_table[top_genes_table$logFC > 0, ]
+top_negative <- top_genes_table[top_genes_table$logFC < 0, ]
+top_positive_sorted <- top_positive[order(top_positive$logFC,
+  decreasing = TRUE
+), ]
+top_negative_sorted <- top_negative[order(top_negative$logFC), ]
+top_positive_3 <- head(top_positive_sorted, 3)
+top_negative_3 <- head(top_negative_sorted, 3)
+print("Top 3 Positive Genes:")
+print(top_positive_3)
+print("Top 3 Negative Genes:")
+print(top_negative_3)
+
+top3_genes <- rownames(top_positive_3)
+ab_comb <- cbind(
+  txi_control$abundance[top3_genes, ],
+  txi_condition1$abundance[top3_genes, ]
+)
+colnames(ab_comb) <- c(
+  "control_rep1", "control_rep2", "control_rep3",
+  "condition1_rep1", "condition1_rep2", "condition1_rep3"
+)
+abundance_long <- as.data.frame(ab_comb)
+abundance_long$GeneID <- rownames(abundance_long)
+abundance_long <- abundance_long %>%
+  pivot_longer(
+    cols = -GeneID,
+    names_to = "Condition_Replicate",
+    values_to = "Expression"
+  )
+abundance_long$Condition <- gsub(
+  "_.*", "",
+  abundance_long$Condition_Replicate
+)
+abundance_long$Replicate <- gsub(
+  ".*_", "",
+  abundance_long$Condition_Replicate
+)
+
+p <- ggplot(abundance_long, aes(
+  x = Condition, y = Expression,
+  fill = Replicate
+)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  facet_wrap(~GeneID) +
+  labs(
+    title = "Top Genes Expression by Condition",
+    x = "Condition",
+    y = "Normalized Expression"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+ggsave("../results/top_positive_genes_expression_by_condition2.png",
+  plot = p,
+  width = 10, height = 8, dpi = 300
+)
+# conditon2 negative
+
+top3_genes <- rownames(top_negative_3)
+ab_comb <- cbind(
+  txi_control$abundance[top3_genes, ],
+  txi_condition1$abundance[top3_genes, ]
+)
+colnames(ab_comb) <- c(
+  "control_rep1", "control_rep2", "control_rep3",
+  "condition1_rep1", "condition1_rep2", "condition1_rep3"
+)
+abundance_long <- as.data.frame(ab_comb)
+abundance_long$GeneID <- rownames(abundance_long)
+abundance_long <- abundance_long %>%
+  pivot_longer(
+    cols = -GeneID,
+    names_to = "Condition_Replicate",
+    values_to = "Expression"
+  )
+abundance_long$Condition <- gsub(
+  "_.*", "",
+  abundance_long$Condition_Replicate
+)
+abundance_long$Replicate <- gsub(
+  ".*_", "",
+  abundance_long$Condition_Replicate
+)
+
+p <- ggplot(abundance_long, aes(
+  x = Condition, y = Expression,
+  fill = Replicate
+)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  facet_wrap(~GeneID) +
+  labs(
+    title = "Top Genes Expression by Condition",
+    x = "Condition",
+    y = "Normalized Expression"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+ggsave("../results/top_negative_genes_expression_by_condition2.png",
+  plot = p,
+  width = 10, height = 8, dpi = 300
+)
