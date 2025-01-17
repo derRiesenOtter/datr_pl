@@ -108,12 +108,12 @@ ggsave("edgeR_volcano_con2.pdf", plot = edgeR_volcano_con2, device = "pdf", path
 # venn diagrams
 
 lfc_ge_2_cn1 <- row.names(res_cond1[abs(res_cond1$logFC) >= 2, ])
-fdr_ad_p_le_0.05_cn1 <- row.names(res_cond1[p.adjust(res_cond1$FDR, "BH") <= 0.05, ])
+fdr_le_0.05_cn1 <- row.names(res_cond1[res_cond1$FDR <= 0.05, ])
 fdr_le_0.01_cn1 <- row.names(res_cond1[res_cond1$FDR <= 0.01, ])
 
 deg_list_cn1 <- list(
   LFC_greater_2 = lfc_ge_2_cn1,
-  FDR_ad_p_value = fdr_ad_p_le_0.05_cn1,
+  FDR_less_than_0.05 = fdr_le_0.05_cn1,
   FDR_less_than_0.01 = fdr_le_0.01_cn1
 )
 
@@ -123,12 +123,12 @@ edgeR_venn_diagram_cn1 <- ggVennDiagram(deg_list_cn1) +
 ggsave("../results/edgeR_venn_diagram_cn1.pdf", plot = edgeR_venn_diagram_cn1, device = "pdf")
 
 lfc_ge_2_cn2 <- row.names(res_cond1[abs(res_cond2$logFC) >= 2, ])
-fdr_ad_p_le_0.05_cn2 <- row.names(res_cond2[p.adjust(res_cond1$FDR, "BH") <= 0.05, ])
+fdr_le_0.05_cn2 <- row.names(res_cond2[res_cond1$FDR <= 0.05, ])
 fdr_le_0.01_cn2 <- row.names(res_cond2[res_cond1$FDR <= 0.01, ])
 
 deg_list_cn2 <- list(
   LFC_greater_2 = lfc_ge_2_cn2,
-  FDR_ad_p_value = fdr_ad_p_le_0.05_cn2,
+  FDR_less_than_0.05 = fdr_le_0.05_cn2,
   FDR_less_than_0.01 = fdr_le_0.01_cn2
 )
 
@@ -182,7 +182,11 @@ res_cond2$gene_id <- row.names(res_cond2)
 edgeR_table <- merge(edgeR_table, res_cond2[, c("gene_id", "logFC")], by = "gene_id")
 names(edgeR_table)[[12]] <- "logFC-Control-vs-Condition2"
 
-# TODO Adjusted p-values are missing
+edgeR_table <- merge(edgeR_table, res_cond1[, c("gene_id", "FDR")], by = "gene_id")
+names(edgeR_table)[[13]] <- "Adjusted p-value-Control-vs-Condition1"
+
+edgeR_table <- merge(edgeR_table, res_cond2[, c("gene_id", "FDR")], by = "gene_id")
+names(edgeR_table)[[14]] <- "Adjusted p-value-Control-vs-Condition2"
 
 # head(edgeR_table)
 
@@ -447,15 +451,13 @@ ggsave("limma_volcano_con2.pdf", plot = limma_volcano_con2, device = "pdf", path
 
 head(control_vs_condition1_voom)
 
-# TODO where is the FDR value
-
 lfc_ge_2_cn1 <- row.names(control_vs_condition1_voom[abs(control_vs_condition1_voom$logFC) >= 2, ])
-fdr_ad_p_le_0.05_cn1 <- row.names(control_vs_condition1_voom[control_vs_condition1_voom$adj.P.Val <= 0.05, ])
-fdr_le_0.01_cn1 <- row.names(control_vs_condition1_voom[control_vs_condition1_voom$FDR <= 0.01, ])
+fdr_le_0.05_cn1 <- row.names(control_vs_condition1_voom[control_vs_condition1_voom$adj.P.Val <= 0.05, ])
+fdr_le_0.01_cn1 <- row.names(control_vs_condition1_voom[control_vs_condition1_voom$adj.P.Val <= 0.01, ])
 
 deg_list_cn1 <- list(
   LFC_greater_2 = lfc_ge_2_cn1,
-  FDR_ad_p_value = fdr_ad_p_le_0.05_cn1,
+  FDR_less_than_0.05 = fdr_le_0.05_cn1,
   FDR_less_than_0.01 = fdr_le_0.01_cn1
 )
 
@@ -463,6 +465,21 @@ limma_venn_diagram_cn1 <- ggVennDiagram(deg_list_cn1) +
   scale_fill_gradient(low = "white", high = "blue") +
   theme_minimal()
 ggsave("../results/limma_venn_diagram_cn1.pdf", plot = limma_venn_diagram_cn1, device = "pdf")
+
+lfc_ge_2_cn2 <- row.names(control_vs_condition2_voom[abs(control_vs_condition2_voom$logFC) >= 2, ])
+fdr_le_0.05_cn2 <- row.names(control_vs_condition2_voom[control_vs_condition2_voom$adj.P.Val <= 0.05, ])
+fdr_le_0.01_cn2 <- row.names(control_vs_condition2_voom[control_vs_condition2_voom$adj.P.Val <= 0.01, ])
+
+deg_list_cn2 <- list(
+  LFC_greater_2 = lfc_ge_2_cn2,
+  FDR_less_than_0.05 = fdr_le_0.05_cn2,
+  FDR_less_than_0.01 = fdr_le_0.01_cn2
+)
+
+limma_venn_diagram_cn2 <- ggVennDiagram(deg_list_cn2) +
+  scale_fill_gradient(low = "white", high = "blue") +
+  theme_minimal()
+ggsave("../results/limma_venn_diagram_cn2.pdf", plot = limma_venn_diagram_cn2, device = "pdf")
 
 # increased and decreased genes
 
@@ -499,7 +516,13 @@ control_vs_condition2_voom$gene_id <- row.names(control_vs_condition2_voom)
 limma_table <- merge(limma_table, control_vs_condition2_voom[, c("gene_id", "logFC")], by = "gene_id")
 names(limma_table)[[12]] <- "logFC-Control-vs-Condition2"
 
-head(limma_table)
+limma_table <- merge(limma_table, control_vs_condition1_voom[, c("gene_id", "adj.P.Val")], by = "gene_id")
+names(edgeR_table)[[13]] <- "Adjusted p-value-Control-vs-Condition1"
+
+limma_table <- merge(limma_table, control_vs_condition2_voom[, c("gene_id", "adj.P.Val")], by = "gene_id")
+names(edgeR_table)[[14]] <- "Adjusted p-value-Control-vs-Condition2"
+
+
 
 # TODO Adjusted p-values are missing
 
