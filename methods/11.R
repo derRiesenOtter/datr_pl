@@ -1,17 +1,17 @@
+library(tidyverse)
 library(tximport)
 library(stringr)
-library(dplyr)
 library(edgeR)
 library(ggplot2)
 library(ggVennDiagram)
-library(tidyr)
 library(limma)
+library(wordcloud)
 
 # map transcripts to genes
 
-control_files <- list.files(path = "../results/control", pattern = "tsv$", recursive = TRUE, full.names = TRUE)
-condition1_files <- list.files(path = "../results/condition1", pattern = "tsv$", recursive = TRUE, full.names = TRUE)
-condition2_files <- list.files(path = "../results/condition2", pattern = "tsv$", recursive = TRUE, full.names = TRUE)
+control_files <- list.files(path = "../material/control", pattern = "tsv$", recursive = TRUE, full.names = TRUE)
+condition1_files <- list.files(path = "../material/condition1", pattern = "tsv$", recursive = TRUE, full.names = TRUE)
+condition2_files <- list.files(path = "../material/condition2", pattern = "tsv$", recursive = TRUE, full.names = TRUE)
 
 tx2gene <- read.table("../results/tx2gene", header = FALSE)
 
@@ -40,8 +40,6 @@ counts <- cbind(
   txi_condition2$counts
 )
 
-head(counts)
-
 # perform differential gene expression analysis
 
 group <- factor(c(rep("control", 3), rep("condition1", 3), rep("condition2", 3)))
@@ -59,11 +57,11 @@ fit <- glmQLFit(y, design)
 
 test_control_vs_cond1 <- glmQLFTest(fit, contrast = c(-1, 1, 0))
 results_control_vs_cond1 <- topTags(test_control_vs_cond1, n = Inf)
-write.csv(results_control_vs_cond1, "../results/control_vs_condition1_results.csv")
+write.csv(results_control_vs_cond1, "../results/11_edgeR_control_vs_condition1_results.csv")
 
 test_control_vs_cond2 <- glmQLFTest(fit, contrast = c(-1, 0, 1))
 results_control_vs_cond2 <- topTags(test_control_vs_cond2, n = Inf)
-write.csv(results_control_vs_cond2, "../results/control_vs_condition2_results.csv")
+write.csv(results_control_vs_cond2, "../results/11_edgeR_control_vs_condition2_results.csv")
 
 # results
 
@@ -89,10 +87,10 @@ edgeR_volcano_con1 <- ggplot(data = res_cond1, aes(x = logFC, y = -log10(PValue)
   theme_minimal() +
   labs(
     x = "logFC",
-    y = "-log10(PValue)",
+    y = expression(-log[10](PValue)),
     color = "Significance"
   )
-ggsave("edgeR_volcano_con1.pdf", plot = edgeR_volcano_con1, device = "pdf", path = "../results")
+ggsave("11_edgeR_volcano_con1.pdf", plot = edgeR_volcano_con1, device = "pdf", path = "../results")
 
 edgeR_volcano_con2 <- ggplot(data = res_cond2, aes(x = logFC, y = -log10(PValue), color = sig)) +
   geom_point() +
@@ -103,7 +101,7 @@ edgeR_volcano_con2 <- ggplot(data = res_cond2, aes(x = logFC, y = -log10(PValue)
     y = expression(-log[10](PValue)),
     color = "Significance"
   )
-ggsave("edgeR_volcano_con2.pdf", plot = edgeR_volcano_con2, device = "pdf", path = "../results")
+ggsave("11_edgeR_volcano_con2.pdf", plot = edgeR_volcano_con2, device = "pdf", path = "../results")
 
 # venn diagrams
 
@@ -112,30 +110,30 @@ fdr_le_0.05_cn1 <- row.names(res_cond1[res_cond1$FDR <= 0.05, ])
 fdr_le_0.01_cn1 <- row.names(res_cond1[res_cond1$FDR <= 0.01, ])
 
 deg_list_cn1 <- list(
-  LFC_greater_2 = lfc_ge_2_cn1,
-  FDR_less_than_0.05 = fdr_le_0.05_cn1,
-  FDR_less_than_0.01 = fdr_le_0.01_cn1
+  LFC_gr_2 = lfc_ge_2_cn1,
+  FDR_le_0.05 = fdr_le_0.05_cn1,
+  FDR_le_0.01 = fdr_le_0.01_cn1
 )
 
 edgeR_venn_diagram_cn1 <- ggVennDiagram(deg_list_cn1) +
   scale_fill_gradient(low = "white", high = "blue") +
   theme_minimal()
-ggsave("../results/edgeR_venn_diagram_cn1.pdf", plot = edgeR_venn_diagram_cn1, device = "pdf")
+ggsave("../results/11_edgeR_venn_diagram_cn1.pdf", plot = edgeR_venn_diagram_cn1, device = "pdf")
 
 lfc_ge_2_cn2 <- row.names(res_cond1[abs(res_cond2$logFC) >= 2, ])
 fdr_le_0.05_cn2 <- row.names(res_cond2[res_cond1$FDR <= 0.05, ])
 fdr_le_0.01_cn2 <- row.names(res_cond2[res_cond1$FDR <= 0.01, ])
 
 deg_list_cn2 <- list(
-  LFC_greater_2 = lfc_ge_2_cn2,
-  FDR_less_than_0.05 = fdr_le_0.05_cn2,
-  FDR_less_than_0.01 = fdr_le_0.01_cn2
+  LFC_gr_2 = lfc_ge_2_cn2,
+  FDR_le_0.05 = fdr_le_0.05_cn2,
+  FDR_le_0.01 = fdr_le_0.01_cn2
 )
 
 edgeR_venn_diagram_cn2 <- ggVennDiagram(deg_list_cn2) +
   scale_fill_gradient(low = "white", high = "blue") +
   theme_minimal()
-ggsave("../results/edgeR_venn_diagram_cn2.pdf", plot = edgeR_venn_diagram_cn2, device = "pdf")
+ggsave("../results/11_edgeR_venn_diagram_cn2.pdf", plot = edgeR_venn_diagram_cn2, device = "pdf")
 
 # increased and decreased genes
 
@@ -146,8 +144,104 @@ edgeR_res_cond2_inc <- row.names(res_cond1[res_cond2$logFC > 0, ])
 edgeR_res_cond2_dec <- row.names(res_cond1[res_cond2$logFC < 0, ])
 
 # top 20 differentially expressed geens
-head(res_cond1[order(abs(res_cond1$logFC), decreasing = TRUE), ], 20)
-head(res_cond2[order(abs(res_cond2$logFC), decreasing = TRUE), ], 20)
+top_up_cn1 <- head(res_cond1[order(res_cond1$logFC, decreasing = TRUE), ], 20)
+top_up_cn2 <- head(res_cond2[order(res_cond2$logFC, decreasing = TRUE), ], 20)
+top_down_cn1 <- head(res_cond1[order(res_cond1$logFC, decreasing = FALSE), ], 20)
+top_down_cn2 <- head(res_cond2[order(res_cond2$logFC, decreasing = FALSE), ], 20)
+
+go_annotations <- read_delim("../material/go_annotations", skip = 4, col_names = FALSE)
+
+go_annotations$gene_id <- ifelse(
+  is.na(str_match(go_annotations[[11]], ".*\\|(.*)")[, 2]),
+  go_annotations[[11]],
+  str_match(go_annotations[[11]], ".*\\|(.*)")[, 2]
+)
+
+names(go_annotations)[[3]] <- "protein_id"
+names(go_annotations)[[10]] <- "protein_description"
+
+top_up_cn1_desc <- subset(go_annotations, gene_id %in% rownames(top_up_cn1))
+top_up_cn2_desc <- subset(go_annotations, gene_id %in% rownames(top_up_cn2))
+top_down_cn1_desc <- subset(go_annotations, gene_id %in% rownames(top_down_cn1))
+top_down_cn2_desc <- subset(go_annotations, gene_id %in% rownames(top_down_cn2))
+
+top_up_cn1_list <- str_split(top_up_cn1_desc$protein_description, " ") %>%
+  unlist() %>%
+  tolower()
+top_up_cn2_list <- str_split(top_up_cn2_desc$protein_description, " ") %>%
+  unlist() %>%
+  tolower()
+top_down_cn1_list <- str_split(top_down_cn1_desc$protein_description, " ") %>%
+  unlist() %>%
+  tolower()
+top_down_cn2_list <- str_split(top_down_cn2_desc$protein_description, " ") %>%
+  unlist() %>%
+  tolower()
+
+bad_words_list <- c(
+  "protein",
+  "subunit",
+  "complex",
+  "factor",
+  "and",
+  "putative",
+  "iii",
+  "rna",
+  "dna",
+  "uncharacterized",
+  "cell",
+  "homolog",
+  "with",
+  "atp-dependent",
+  "yel009c-a",
+  "probable"
+)
+
+top_up_cn1_list <- top_up_cn1_list[!top_up_cn1_list %in% bad_words_list & nchar(top_up_cn1_list) > 2]
+top_up_cn2_list <- top_up_cn2_list[!top_up_cn2_list %in% bad_words_list & nchar(top_up_cn2_list) > 2]
+top_down_cn1_list <- top_down_cn1_list[!top_down_cn1_list %in% bad_words_list & nchar(top_down_cn1_list) > 2]
+top_down_cn2_list <- top_down_cn2_list[!top_down_cn2_list %in% bad_words_list & nchar(top_down_cn2_list) > 2]
+
+
+top_up_cn1_list_df <- as.data.frame(table(top_up_cn1_list))
+top_up_cn2_list_df <- as.data.frame(table(top_up_cn2_list))
+top_down_cn1_list_df <- as.data.frame(table(top_down_cn1_list))
+top_down_cn2_list_df <- as.data.frame(table(top_down_cn2_list))
+
+
+
+
+pdf("../results/11_edgeR_wordcloud_cn1_up.pdf")
+wordcloud(
+  words = top_up_cn1_list_df$top_up_cn1_list, freq = top_up_cn1_list_df$Freq, min.freq = 1,
+  max.words = 200, random.order = FALSE, rot.per = 0.35,
+  colors = brewer.pal(8, "Set1")
+)
+dev.off()
+
+pdf("../results/11_edgeR_wordcloud_cn2_up.pdf")
+wordcloud(
+  words = top_up_cn2_list_df$top_up_cn2_list, freq = top_up_cn2_list_df$Freq, min.freq = 1,
+  max.words = 200, random.order = FALSE, rot.per = 0.35,
+  colors = brewer.pal(8, "Set1")
+)
+dev.off()
+
+pdf("../results/11_edgeR_wordcloud_cn1_down.pdf")
+wordcloud(
+  words = top_down_cn1_list_df$top_down_cn1_list, freq = top_down_cn1_list_df$Freq, min.freq = 1,
+  max.words = 200, random.order = FALSE, rot.per = 0.35,
+  colors = brewer.pal(8, "Set1")
+)
+dev.off()
+
+pdf("../results/11_edgeR_wordcloud_cn2_down.pdf")
+wordcloud(
+  words = top_down_cn2_list_df$top_down_cn2_list, freq = top_down_cn2_list_df$Freq, min.freq = 1,
+  max.words = 200, random.order = FALSE, rot.per = 0.35,
+  colors = brewer.pal(8, "Set1")
+)
+dev.off()
 
 # table
 
@@ -241,13 +335,12 @@ p <- ggplot(abundance_long, aes(
   geom_bar(stat = "identity", position = "dodge") +
   facet_wrap(~GeneID) +
   labs(
-    title = "Top Genes Expression by Condition",
     x = "Condition",
     y = "Normalized Expression"
   ) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
-ggsave("../results/top_positive_genes_expression_by_condition1.png",
+ggsave("../results/11_edgeR_top_positive_genes_expression_by_condition1.png",
   plot = p,
   width = 10, height = 8, dpi = 300
 )
@@ -286,13 +379,12 @@ p <- ggplot(abundance_long, aes(
   geom_bar(stat = "identity", position = "dodge") +
   facet_wrap(~GeneID) +
   labs(
-    title = "Top Genes Expression by Condition",
     x = "Condition",
     y = "Normalized Expression"
   ) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
-ggsave("../results/top_negative_genes_expression_by_condition1.png",
+ggsave("../results/11_edgeR_top_negative_genes_expression_by_condition1.png",
   plot = p,
   width = 10, height = 8, dpi = 300
 )
@@ -346,13 +438,12 @@ p <- ggplot(abundance_long, aes(
   geom_bar(stat = "identity", position = "dodge") +
   facet_wrap(~GeneID) +
   labs(
-    title = "Top Genes Expression by Condition",
     x = "Condition",
     y = "Normalized Expression"
   ) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
-ggsave("../results/top_positive_genes_expression_by_condition2.png",
+ggsave("../results/11_edgeR_top_positive_genes_expression_by_condition2.png",
   plot = p,
   width = 10, height = 8, dpi = 300
 )
@@ -391,13 +482,12 @@ p <- ggplot(abundance_long, aes(
   geom_bar(stat = "identity", position = "dodge") +
   facet_wrap(~GeneID) +
   labs(
-    title = "Top Genes Expression by Condition",
     x = "Condition",
     y = "Normalized Expression"
   ) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
-ggsave("../results/top_negative_genes_expression_by_condition2.png",
+ggsave("../results/11_edgeR_top_negative_genes_expression_by_condition2.png",
   plot = p,
   width = 10, height = 8, dpi = 300
 )
@@ -411,75 +501,88 @@ dge <- dge[keep, , keep.lib.sizes = FALSE]
 
 dge <- calcNormFactors(dge)
 
-png("../results/voom_plot1.png")
+png("../results/11_voom_plot1.png")
 v <- voom(dge, design, plot = TRUE)
 dev.off()
 
 fit <- lmFit(v, design)
 fit <- eBayes(fit)
 control_vs_condition1_voom <- topTable(fit, coef = 2, number = Inf)
-write.csv(control_vs_condition1_voom, "../results/control_vs_condition1_voom.csv")
+write.csv(control_vs_condition1_voom, "../results/11_limma_control_vs_condition1_voom.csv")
 
 fit <- lmFit(v, design)
 fit <- eBayes(fit)
 control_vs_condition2_voom <- topTable(fit, coef = 3, number = Inf)
-write.csv(control_vs_condition2_voom, "../results/control_vs_condition2_voom.csv")
+write.csv(control_vs_condition2_voom, "../results/11_limma_control_vs_condition2_voom.csv")
 
 # volcano plots lima
 
-limma_volcano_con1 <- ggplot(data = control_vs_condition1_voom, aes(x = logFC, y = -log10(P.Value))) +
-  geom_point() +
-  theme_minimal() +
-  labs(
-    x = "logFC",
-    y = "-log10(PValue)",
-    color = "Significance"
-  )
-ggsave("limma_volcano_con1.pdf", plot = limma_volcano_con1, device = "pdf", path = "../results")
 
-limma_volcano_con2 <- ggplot(data = control_vs_condition2_voom, aes(x = logFC, y = -log10(P.Value))) +
+control_vs_condition1_voom$sig <- ifelse(
+  control_vs_condition1_voom$adj.P.Val < 0.05,
+  "Significant",
+  "Not Significant"
+)
+
+control_vs_condition2_voom$sig <- ifelse(
+  control_vs_condition2_voom$adj.P.Val < 0.05,
+  "Significant",
+  "Not Significant"
+)
+
+limma_volcano_con1 <- ggplot(data = control_vs_condition1_voom, aes(x = logFC, y = -log10(P.Value), col = sig)) +
   geom_point() +
+  scale_color_manual(values = c("Not Significant" = "grey", "Significant" = "red")) +
   theme_minimal() +
   labs(
     x = "logFC",
     y = "-log10(PValue)",
     color = "Significance"
   )
-ggsave("limma_volcano_con2.pdf", plot = limma_volcano_con2, device = "pdf", path = "../results")
+ggsave("11_limma_volcano_con1.pdf", plot = limma_volcano_con1, device = "pdf", path = "../results")
+
+limma_volcano_con2 <- ggplot(data = control_vs_condition2_voom, aes(x = logFC, y = -log10(P.Value), col = sig)) +
+  geom_point() +
+  scale_color_manual(values = c("Not Significant" = "grey", "Significant" = "red")) +
+  theme_minimal() +
+  labs(
+    x = "logFC",
+    y = "-log10(PValue)",
+    color = "Significance"
+  )
+ggsave("11_limma_volcano_con2.pdf", plot = limma_volcano_con2, device = "pdf", path = "../results")
 
 # venn diagrams limma
-
-head(control_vs_condition1_voom)
 
 lfc_ge_2_cn1 <- row.names(control_vs_condition1_voom[abs(control_vs_condition1_voom$logFC) >= 2, ])
 fdr_le_0.05_cn1 <- row.names(control_vs_condition1_voom[control_vs_condition1_voom$adj.P.Val <= 0.05, ])
 fdr_le_0.01_cn1 <- row.names(control_vs_condition1_voom[control_vs_condition1_voom$adj.P.Val <= 0.01, ])
 
 deg_list_cn1 <- list(
-  LFC_greater_2 = lfc_ge_2_cn1,
-  FDR_less_than_0.05 = fdr_le_0.05_cn1,
-  FDR_less_than_0.01 = fdr_le_0.01_cn1
+  LFC_gr_2 = lfc_ge_2_cn1,
+  FDR_le_0.05 = fdr_le_0.05_cn1,
+  FDR_le_0.01 = fdr_le_0.01_cn1
 )
 
 limma_venn_diagram_cn1 <- ggVennDiagram(deg_list_cn1) +
   scale_fill_gradient(low = "white", high = "blue") +
   theme_minimal()
-ggsave("../results/limma_venn_diagram_cn1.pdf", plot = limma_venn_diagram_cn1, device = "pdf")
+ggsave("../results/11_limma_venn_diagram_cn1.pdf", plot = limma_venn_diagram_cn1, device = "pdf")
 
 lfc_ge_2_cn2 <- row.names(control_vs_condition2_voom[abs(control_vs_condition2_voom$logFC) >= 2, ])
 fdr_le_0.05_cn2 <- row.names(control_vs_condition2_voom[control_vs_condition2_voom$adj.P.Val <= 0.05, ])
 fdr_le_0.01_cn2 <- row.names(control_vs_condition2_voom[control_vs_condition2_voom$adj.P.Val <= 0.01, ])
 
 deg_list_cn2 <- list(
-  LFC_greater_2 = lfc_ge_2_cn2,
-  FDR_less_than_0.05 = fdr_le_0.05_cn2,
-  FDR_less_than_0.01 = fdr_le_0.01_cn2
+  LFC_gr_2 = lfc_ge_2_cn2,
+  FDR_le_0.05 = fdr_le_0.05_cn2,
+  FDR_le_0.01 = fdr_le_0.01_cn2
 )
 
 limma_venn_diagram_cn2 <- ggVennDiagram(deg_list_cn2) +
   scale_fill_gradient(low = "white", high = "blue") +
   theme_minimal()
-ggsave("../results/limma_venn_diagram_cn2.pdf", plot = limma_venn_diagram_cn2, device = "pdf")
+ggsave("../results/11_limma_venn_diagram_cn2.pdf", plot = limma_venn_diagram_cn2, device = "pdf")
 
 # increased and decreased genes
 
@@ -490,8 +593,70 @@ limma_res_cond2_inc <- row.names(control_vs_condition2_voom[control_vs_condition
 limma_res_cond2_dec <- row.names(control_vs_condition2_voom[control_vs_condition2_voom$logFC < 0, ])
 
 # top 20 differentially expressed geens
-head(control_vs_condition1_voom[order(abs(control_vs_condition1_voom$logFC), decreasing = TRUE), ], 20)
-head(control_vs_condition2_voom[order(abs(control_vs_condition2_voom$logFC), decreasing = TRUE), ], 20)
+top_up_cn1 <- head(control_vs_condition1_voom[order(control_vs_condition1_voom$logFC, decreasing = TRUE), ], 20)
+top_up_cn2 <- head(control_vs_condition2_voom[order(control_vs_condition2_voom$logFC, decreasing = TRUE), ], 20)
+top_do_cn1 <- head(control_vs_condition1_voom[order(control_vs_condition1_voom$logFC, decreasing = FALSE), ], 20)
+top_do_cn2 <- head(control_vs_condition2_voom[order(control_vs_condition1_voom$logFC, decreasing = FALSE), ], 20)
+
+top_up_cn1_desc <- subset(go_annotations, gene_id %in% rownames(top_up_cn1))
+top_up_cn2_desc <- subset(go_annotations, gene_id %in% rownames(top_up_cn2))
+top_do_cn1_desc <- subset(go_annotations, gene_id %in% rownames(top_do_cn1))
+top_do_cn2_desc <- subset(go_annotations, gene_id %in% rownames(top_do_cn2))
+
+top_up_cn1_list <- str_split(top_up_cn1_desc$protein_description, " ") %>%
+  unlist() %>%
+  tolower()
+top_up_cn2_list <- str_split(top_up_cn2_desc$protein_description, " ") %>%
+  unlist() %>%
+  tolower()
+top_do_cn1_list <- str_split(top_do_cn1_desc$protein_description, " ") %>%
+  unlist() %>%
+  tolower()
+top_do_cn2_list <- str_split(top_do_cn2_desc$protein_description, " ") %>%
+  unlist() %>%
+  tolower()
+
+top_up_cn1_list <- top_up_cn1_list[!top_up_cn1_list %in% bad_words_list & nchar(top_up_cn1_list) > 2]
+top_up_cn2_list <- top_up_cn2_list[!top_up_cn2_list %in% bad_words_list & nchar(top_up_cn2_list) > 2]
+top_do_cn1_list <- top_do_cn1_list[!top_do_cn1_list %in% bad_words_list & nchar(top_do_cn1_list) > 2]
+top_do_cn2_list <- top_do_cn2_list[!top_do_cn2_list %in% bad_words_list & nchar(top_do_cn2_list) > 2]
+
+top_up_cn1_list_df <- as.data.frame(table(top_up_cn1_list))
+top_up_cn2_list_df <- as.data.frame(table(top_up_cn2_list))
+top_do_cn1_list_df <- as.data.frame(table(top_do_cn1_list))
+top_do_cn2_list_df <- as.data.frame(table(top_do_cn2_list))
+
+pdf("../results/11_limma_wordcloud_cn1_up.pdf")
+wordcloud(
+  words = top_up_cn1_list_df$top_up_cn1_list, freq = top_up_cn1_list_df$Freq, min.freq = 1,
+  max.words = 200, random.order = FALSE, rot.per = 0.35,
+  colors = brewer.pal(8, "Set1")
+)
+dev.off()
+
+pdf("../results/11_limma_wordcloud_cn2_up.pdf")
+wordcloud(
+  words = top_up_cn2_list_df$top_up_cn2_list, freq = top_up_cn2_list_df$Freq, min.freq = 1,
+  max.words = 200, random.order = FALSE, rot.per = 0.35,
+  colors = brewer.pal(8, "Set1")
+)
+dev.off()
+
+pdf("../results/11_limma_wordcloud_cn1_down.pdf")
+wordcloud(
+  words = top_down_cn1_list_df$top_down_cn1_list, freq = top_down_cn1_list_df$Freq, min.freq = 1,
+  max.words = 200, random.order = FALSE, rot.per = 0.35,
+  colors = brewer.pal(8, "Set1")
+)
+dev.off()
+
+pdf("../results/11_wordcloud_cn2_down.pdf")
+wordcloud(
+  words = top_down_cn2_list_df$top_down_cn2_list, freq = top_down_cn2_list_df$Freq, min.freq = 1,
+  max.words = 200, random.order = FALSE, rot.per = 0.35,
+  colors = brewer.pal(8, "Set1")
+)
+dev.off()
 
 # table limma
 
@@ -521,10 +686,6 @@ names(edgeR_table)[[13]] <- "Adjusted p-value-Control-vs-Condition1"
 
 limma_table <- merge(limma_table, control_vs_condition2_voom[, c("gene_id", "adj.P.Val")], by = "gene_id")
 names(edgeR_table)[[14]] <- "Adjusted p-value-Control-vs-Condition2"
-
-
-
-# TODO Adjusted p-values are missing
 
 # grouped barcharts limma
 
@@ -577,13 +738,12 @@ p <- ggplot(abundance_long, aes(
   geom_bar(stat = "identity", position = "dodge") +
   facet_wrap(~GeneID) +
   labs(
-    title = "Top Genes Expression by Condition",
     x = "Condition",
     y = "Normalized Expression"
   ) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
-ggsave("../results/top_positive_genes_expression_by_condition1_limma.png",
+ggsave("../results/11_top_positive_genes_expression_by_condition1_limma.png",
   plot = p,
   width = 10, height = 8, dpi = 300
 )
@@ -628,7 +788,7 @@ p <- ggplot(abundance_long, aes(
   ) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
-ggsave("../results/top_negative_genes_expression_by_condition1_limma.png",
+ggsave("../results/11_top_negative_genes_expression_by_condition1_limma.png",
   plot = p,
   width = 10, height = 8, dpi = 300
 )
@@ -688,7 +848,7 @@ p <- ggplot(abundance_long, aes(
   ) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
-ggsave("../results/top_positive_genes_expression_by_condition2_limma.png",
+ggsave("../results/11_top_positive_genes_expression_by_condition2_limma.png",
   plot = p,
   width = 10, height = 8, dpi = 300
 )
@@ -733,7 +893,7 @@ p <- ggplot(abundance_long, aes(
   ) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
-ggsave("../results/top_negative_genes_expression_by_condition2_limma.png",
+ggsave("../results/11_top_negative_genes_expression_by_condition2_limma.png",
   plot = p,
   width = 10, height = 8, dpi = 300
 )
