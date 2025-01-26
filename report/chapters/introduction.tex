@@ -1,21 +1,27 @@
 \chapter{Introduction}
+Heat stress poses a significant challenge to organisms by damaging cellular 
+structures and functions. In response, cells activate the heat shock response, 
+an ancient and conserved mechanism involving the production of heat shock proteins. 
+These molecular chaperones prevent protein aggregation, assist in protein refolding, 
+and restore cellular homeostasis. Triggered by protein unfolding rather than direct 
+temperature sensing, this response mitigates widespread cellular disruptions, 
+including cytoskeletal damage, organelle disorganization, and ATP depletion. 
+\cite{richter_heat_2010}
 
-\section{questions to answer}
-The Introduction mostly answers the following questions in a short manner:
-\begin{itemize}
-	\item What is the topic of this scientific publication?
-	\item What is the current point of research?
-	\item What materials and which methods were used to work on the topic?
-	\item What is the hypothesis, that was to confirm or deny?
-    \item This is an example for a citation (\cite{Beispiel1}). % Siehe dazu auch ./bibliography/resources.bib
+This work focuses on the analyses of gene expression data provided by a yeast 
+heat shock experiment that concentrated 
+on the binding protein Mip6. The researchers 
+that conducted this experiment tested the heat shock response on a single 
+culture of \textit{Saccharomyces cerevisiaes} that was split into three groups. 
+The control group, that was maintained at $30^\circ\text{C}$ and two groups 
+that were incubated at $39^\circ\text{C}$ for 20 (Condition 1) and 120 (Condition 2)
+minutes. The RNA-seq data gathered in this experiment will be analysed here. 
+\cite{nuno-cabanes_multi-omics_2020}
 
-\end{itemize}
+In our analyses we will cover the genetic response of yeast to heat shock by 
+determining which classes of genes were up- and down-regulated. We will also 
+invest if there are clusters of genes that show a similar response and examine 
+their general function using the R package WGCNA. We will also compare the results 
+of the tools Kallisto and Bowtie2 used to create the alignments as well as the 
+results for differential gene expression created by EdgeR and Limma.
 
-\section{Introduction style}
-An Introduction is written in plain text, and is usually written as one
-paragraph of continuing text, although it is also possible to subdivide the
-text into different partitions.
-
-\subsection{This is a sub-section}
-
-Lorem ipsum bla foo bar...

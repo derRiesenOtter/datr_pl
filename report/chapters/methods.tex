@@ -1,79 +1,81 @@
 \chapter{Methods}
-\section{Reproduction}
-Throughout the whole paper there is a need to describe every detail and every
-step in a precise manner to make sure all created results can be reproduced by
-others. First and foremost this reproduction demand has to be ensured in the
-"methods" chapter.
-
-Also very important are:
-\begin{itemize}
-	\item A chronological order of all steps (including software versions,
-	details, data-handling, ..) 
-	\item What method was used to solve each part of the task?  
-	\item What data versions created which results?
-\end{itemize}
-
-\begin{figure}[ht]
-    \centering
-    \includegraphics[width=1\textwidth]{figures/alphafold_architecture.png}
-    \caption{Example of a captiones figure}
-    \label{modelarch}
-\end{figure}
-This is a single-line code example:
-\begin{verbatim}
-    $ docker run --rm --gpus all nvidia/cuda:11.0-base nvidia-smi
-\end{verbatim}
-\section{Formula examples}
-Scores below 0.2 belong to randomly selected unrelated proteins, according 
-to stringent statistics of structures in the \acrshort{PDB}, while those with
-more than 0.5 generally have the same protein fold (\cite{Beispiel1}) oder \parencite{Beispiel1}. The TM-score
-is calculated defined by:
-\[ TM-score = max 
-\begin{bmatrix}
-\label{complex_formula_1}
-\frac{1}{L_{target}}\sum_{i}^{L_{common}} \frac{1}{1+(\frac{d_i}{d_0(L_{target})})^2}
-\end{bmatrix}\]
-Where L$_{target}$ is the length of the amino acid sequence of the target
-protein, and L$_{common}$ is the number of residues that appear in both the
-template and target structures, d$_{i}$ is the distance between the $i$th pair
-of residues in the template and target structures, and $d_{0} (L_{target})$ is
-a distance scale that normalizes distances and is defined by:
-\[ d_{0} (L_{target}) = 1.24\sqrt[3]{L_{target}-15-1.8} \]
-
-This is a refererence to the labeled (numbered) formula [\ref{complex_formula_1}]
-When comparing two protein structures that have the same residue order, L$_{common}$ 
-reads from the C-alpha order number of the structure files. The \acrshort{RMSD}
-value is defined by: \[ RMSD = \sqrt{\frac{1}{N}\sum_{i=1}^{N} \delta i^2} \]
-Where $\delta$i is the distance between atom i and either a reference structure 
-or the mean position of the N equivalent atoms.
-
+The analysis was conducted on the BioServer of the TH Bingen running 
+Ubuntu 22.04.2 (x86) as well as on a private laptop running MacOS 15.1.1 (arm). 
+\section{Programs}
+The programs and versions listet in table \ref{tab:programs} were used for the analysis.
 
 \begin{table}[H]
-  \begin{center}
-    \caption[Distribution of values tested during simulated annealing in 4th
-    quartile of high scoring parameter sets]{Distribution of values tested during
-    simulated annealing in 4th quartile of high scoring parameter sets (mean
-    F2-Scores $>$ 0.6454).}
-    \begin{tabular}{c r r r r r r r}%
-      \toprule{}%
-      Parameter & Minimum & 1st Quartile & Median & Mean \\
-      \midrule{}%
-      $\alpha$        & 0.1000 & 0.2000 & 0.4000 & 0.4692     \\
-      $\beta$         & 0.0476 & 0.3704 & 0.4545 & 0.4622     \\
-      $\omega$        & 0.0476 & 0.1250 & 0.2105 & 0.2324     \\
-      $\sigma$        & 0.0476 & 0.1875 & 0.3077 & 0.3054     \\
-      Sprot-$w$       & 10.0000 & 20.0000 & 30.0000 & 41.02009738 \\
-      Sprot-$\delta$  & 0.1000 & 0.3000 & 0.5000 & 0.5365    \\
-      trEMBL-$w$      & 10.0000 & 50.0000 & 70.0000 & 67.10005704 \\
-      trEMBL-$\delta$ & 0.1000 & 0.5000 & 0.7000 & 0.6823     \\
-      TAIR-$w$        & 10.0000 & 30.0000 & 50.0000 & 53.79005853 \\
-      TAIR-$\delta$   & 0.1000 & 0.3000 & 0.5000 & 0.5392     \\
-      \bottomrule{}%
-    \end{tabular}
-    \label{tbl:value_table}
-  \end{center}
+	\center
+	\caption{Programs used for the analysis}\label{tab:programs}
+	\begin{tabular}{ccl}
+		\toprule
+
+    Program       & Version & Operating System        \\
+		\midrule
+    bash          & 5.1.16 & Ubuntu       \\
+		bowtie2       & 2.4.4   & Ubuntu      \\
+		fastqc        & 0.11.9    & Ubuntu    \\
+		Stringtie & 2.2.1      & Ubuntu   \\
+		gffread       & 0.12.8      & Ubuntu  \\
+		kallisto      & 0.46.2       & Ubuntu \\
+		R             & 4.4.0        & Ubuntu \\
+		Samtools      & 1.13         & Ubuntu \\
+		slurm-wlm          & 21.08.5 & Ubuntu \\
+		Trimmomatic   & 0.39         & Ubuntu \\
+    bash          & 5.2.37    & MacOS    \\
+    ggVennDiagram             & 1.5.2  & MacOS       \\
+    ggplot2           &   3.5.1   & MacOS   \\
+    wordcloud            &   2.6  & MacOS    \\
+    WGCNA           &   1.73   & MacOS   \\
+    tximport          &     1.34.0 & MacOS   \\
+    stringr        &     1.5.1  & MacOS  \\
+    edgeR           &   4.4.1    & MacOS  \\
+    RColorBrewer         &  1.1-3   & MacOS    \\
+    limma         &  3.62.2    & MacOS   \\
+    tidyverse         &  2.0.0    & MacOS   \\
+    corrplot         &  0.95    & MacOS   \\
+    rtracklayer         &  1.66.0 & MacOS \\
+    tidyverse         &  2.0.0   & MacOS    \\
+		\bottomrule
+	\end{tabular}
 \end{table}
 
-This is an example on how to reference a table that has the
-\verb|\label{tbl:value_table}| by using \verb|\ref{tbl:value_table}|: The
-estimated values are listed in table \ref{tbl:value_table}.
+\section{Reference Transcriptome}
+To create a reference transcriptome we used gffread on our reference genome. 
+We calculated the number of generated reference
+transcriptomes, checked if all transcripts in the gff file have been translated 
+to reference transcripts in the output file
+and analysed the number of splice variants for each gene.
+
+\section{Quality Filtering}
+To ensure that only reads with a sufficient quality were used for our analysis we used Trimmomatic to remove
+adapter sequences, low-quality bases, and other contaminants. We calculated the number of genes filtered out
+and compared the quality of the reads before and after this step with FastQC.
+
+\section{Gene Expression Quantification}
+We quantified the gene expression using Kallisto and Bowtie2.
+Samtools was used to create a binary file from the result file of bowtie2. Stringtie was used
+to generate the gene counts for our bowtie2 results.
+For Kallisto we calculated the total number of expressed genes as well as the percentage of expressed
+genes relative to the total in the transcriptome. Furthermore, we also analysed some basic statistics and
+calculated the Correlation between the samples.
+For bowtie2 we also calculated the percentage of aligned reads as well as analysed the
+alignment quality statistics.
+For both methods we extracted the TPM values on a gene basis and compared them. 
+We then calculated the log fold change for the TPM values and also compared them between the 
+methods.
+
+\section{Weighted Gene Co-expression Network Analysis}
+Using the results of the Kallisto gene expression quantification we performed a Weighted Gene 
+Co-expression Network Analysis to construct a gene network and identify modules of high 
+correlation. We also identified gene modules showing significant correlations with
+heat-shock conditions and created Wordclouds using the Gene Ontology Term Annotations. 
+
+
+\section{Differential Gene Expression}
+For the differential gene expression analysis we also used the results of Kallisto.
+We conducted this analysis with edgeR as well as Limma with the voom normalisation. 
+We identified increased and decreased genes in these differentially expressed gene 
+and again created word clouds. We higlighted the three most extremely changed genes 
+in bar charts. 
+

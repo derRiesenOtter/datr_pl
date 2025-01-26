@@ -738,6 +738,7 @@ p <- ggplot(abundance_long, aes(
   geom_bar(stat = "identity", position = "dodge") +
   facet_wrap(~GeneID) +
   labs(
+    title = "Top Genes Expression by Condition",
     x = "Condition",
     y = "Normalized Expression"
   ) +
@@ -816,7 +817,7 @@ ab_comb <- cbind(
 )
 colnames(ab_comb) <- c(
   "control_rep1", "control_rep2", "control_rep3",
-  "condition1_rep1", "condition1_rep2", "condition1_rep3"
+  "condition2_rep1", "condition2_rep2", "condition2_rep3"
 )
 abundance_long <- as.data.frame(ab_comb)
 abundance_long$GeneID <- rownames(abundance_long)
@@ -861,7 +862,7 @@ ab_comb <- cbind(
 )
 colnames(ab_comb) <- c(
   "control_rep1", "control_rep2", "control_rep3",
-  "condition1_rep1", "condition1_rep2", "condition1_rep3"
+  "condition1_rep2", "condition2_rep2", "condition2_rep3"
 )
 abundance_long <- as.data.frame(ab_comb)
 abundance_long$GeneID <- rownames(abundance_long)

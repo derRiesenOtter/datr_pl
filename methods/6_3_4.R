@@ -37,11 +37,12 @@ names(fraction_of_expressed_genes) <- names(abundance_list)
 print("Fraction of expressed genes: ")
 print(fraction_of_expressed_genes)
 
+abundance_list[1]
 
 print("Summary of the TPM values for each replicate")
 for (i in seq_along(abundance_list)) {
   print(names(abundance_list)[i])
-  print(summary(abundance_list[[1]]$tpm))
+  print(summary(abundance_list[[i]]$tpm))
 }
 
 for (i in seq_along(abundance_list)) {
@@ -306,7 +307,7 @@ density_frac <- ggplot(tpm_comp_frac_long, aes(x = frac, fill = comp)) +
   scale_fill_brewer(palette = "Set1") +
   theme_minimal()
 
-ggsave("../results/6_post_all_frac_density.pdf", plot = density_diff, device = "pdf")
+ggsave("../results/6_post_all_frac_density.pdf", plot = density_frac, device = "pdf")
 
 lfc_k_1 <- tpm_all_lfc_long %>%
   filter(value >= 2) %>%

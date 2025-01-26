@@ -2,8 +2,8 @@
 
 \usepackage[utf8]{inputenc} % ermoeglicht Verwendung von Unicode
 \usepackage{graphicx} % zum einfuegen von grafiken
-  \graphicspath{ {figures/} } % gibt an wo die Grafiken sind
-\usepackage[german]{babel} % zum umstellen auf deutsch
+  \graphicspath{ {../results/} } % gibt an wo die Grafiken sind
+% \usepackage[german]{babel} % zum umstellen auf deutsch
 \usepackage{csquotes} % wegen babel, zum zitieren mit "" sonst warnung
 \newcounter{savepage} % Zähler zum weiterzählen der römischen Zahlen
 \usepackage[hidelinks]{hyperref}
@@ -16,7 +16,7 @@
 \usepackage{algorithmic}
 \usepackage{amsmath}
 \usepackage{float}
-\usepackage[acronym]{glossaries}
+% \usepackage[acronym]{glossaries}
 \usepackage{subcaption} % praktisch, wenn man eine Grafik aus zwei Grafiken oder mehr macht
 
 %Setting counters for citations, tables and figures
@@ -29,74 +29,16 @@
 
 
 
-\makeglossaries
+% \makeglossaries
 
-\newacronym{COVID 19}{COVID 19}{coronavirus disease 2019}
-
-\newacronym{SARS-CoV-2}{SARS-CoV-2}{severe acute respiratory syndrome coronavirus type 2}
-
-\newacronym{plDDT}{plDDT}{predicted local distance difference test}
-
-\newacronym{CASP}{CASP}{Critical Assessment of Protein Structure Prediction}
-
-\newacronym{GPU}{GPU}{graphics processing unit}
-
-\newacronym{AI}{AI}{artificial intelligence} 
-
-\newacronym{RMSD}{RMSD}{root-mean-square deviation} 
-
-\newacronym{Cameo3D}{Cameo3D}{Continuous Automated Model EvaluatiOn} 
-
-\newacronym{Phyre2}{Phyre2}{Protein Homology/analogY Recognition Engine V 2.0} 
-
-\newacronym{RNP}{RNP}{ribonucleocapsid}
-
-\newacronym{RNA}{RNA}{ribonucleic acid}
-
-\newacronym{DNA}{DNA}{deoxyribonucleic acid} 
-
-\newacronym{NSP}{NSP}{Non-structural protein} 
-
-\newacronym{ACE2}{ACE2}{angiotensin-converting enzyme 2} 
-
-\newacronym{BFD}{BFD}{Big Fantastic Database} 
-
-\newacronym{MSA}{MSA}{Multiple Sequence Alignment} 
-
-\newacronym{HMM}{HMM}{Hidden Markov Model} 
-
-\newacronym{ENA}{ENA}{European Nucleotide Archive} 
-
-\newacronym{PDB}{PDB}{Protein Data Bank} 
-
-\newacronym{PSI-BLAST}{PSI-BLAST}{Position-Specific Iterative Basic Local Alignment Search Tool}
-
-\newacronym{VRAM}{VRAM}{video random access memory} 
-
-\newacronym{RAM}{RAM}{random access memory} 
-
-\newacronym{HDD}{HDD}{hard disk drive} 
-
-\newacronym{NVMe}{NVMe}{nonvolatile memory express} 
-
-\newacronym{SSD}{SSD}{solid state drive} 
-
-\newacronym{lDDT-C}{lDDT-C}{local distance difference test-C}
-
-\newacronym{mmCIF}{mmCIF}{macro-molecular Crystallographic Information File} 
-
-\newacronym{PNG}{PNG}{portable network graphic} 
-
-\newacronym{URL}{URL}{uniform resource locator} 
-
-\newacronym{iCn3D}{iCn3D}{I see in 3D} 
+% \newacronym{iCn3D}{iCn3D}{I see in 3D} 
 
 
 \begin{document}
 
 	\pagenumbering{Roman}
 	\input{preamble/titlepage}
-	\input{preamble/summary}
+	% \input{preamble/summary}
 	\listoffigures
 	\listoftables
 	\tableofcontents
@@ -105,7 +47,7 @@
 	\setcounter{savepage}{\arabic{page}} 
 	\pagenumbering{arabic}
 	\input{chapters/introduction}
-  \input{chapters/material}
+	\input{chapters/material}
 	\input{chapters/methods}
 	\input{chapters/main_section}
 	\input{chapters/discussion}

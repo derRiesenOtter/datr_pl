@@ -1,91 +1,320 @@
 \chapter{Results}
 
-\section{Envelope Variants}
+\section{Reference Transcriptome}
+
+From the 6585 genes of \textit{Saccharomyces cerevisiae}, 11599 transcripts have been generated. 
+Of these 6585 genes, 2575 had one splice variant and 4512 had two.
+
+\section{Quality Filtering}
+
+Only a small number of reads were filtered out (up to $\sim 1$ percent).
+The quality improvement was not visible in the data provided by 
+FastQC.
+
+\section{Gene Expression Quantification}
+\subsection{Kallisto}
+For each replicate around ten thousand (mean of 10622) of the 11599 trancripts have 
+been found. This corresponds to over 90 percent. The TPM values between the samples were comparable, 
+with. The control condition had slightly lower median values (between 9 and 12) compared two 
+condition 1 (between 15 and 16) and condition 2 (between 14 and 18). 
+They ranged between 0 and 86654.40. To visualize them the logarithm of the 
+TPM value plus one was used, see
+figure~\ref{fig:box_kallisto}.
 
 \begin{figure}[H]
-\centering
-	\begin{subfigure}[b]{0.45\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{figures/gu280_ref.png}
-		\caption{Left part of a figure partitioned into subfigures.}
-		\label{plddtCon2a}
-	\end{subfigure}
-	\hfill
-	\begin{subfigure}[b]{0.49\textwidth}
-		\centering
-		\includegraphics[width=\textwidth]{figures/gu280_var3.png}
-		\caption{Right part of a figure partitioned into subfigures.}
-		\label{plddtCon2b}
-	\end{subfigure}
-	\caption{An example of a subdivided figure.}
-	\label{subfigure_this}
+  \center
+  \includegraphics[width=0.8\textwidth]{6_3_kallisto_boxplot.pdf}
+  \caption{Box plots of the TPM values for the Kallisto analysis}\label{fig:box_kallisto}
 \end{figure}
 
-As we have labeled the above figure containing subfigures, we can reference it using \ref{subfigure_this}.
+The correlation between the technical and biological replicates of the Kallisto 
+alignment was calculated and visualized in 
+figure~\ref{fig:corr_kallisto}.
+The samples of condition 1 showed a high correlation between each other. The replicates for 
+the control condition as well as for condition 2 differed more in comparison. 
 
 \begin{figure}[H]
-	\centering
-	\fbox{\includegraphics[width=0.9\textwidth]{figures/gu280_var3_comp_close.png}}
-	\caption{An example of an unsubdivided figure.}
-	\label{figured_out}
+  \center
+  \includegraphics[width=0.7\textwidth]{6_3_kallisto_corr_matrix.pdf}
+  \caption{Correlation plot for the technical and biological replicates of the Kallisto
+  analysis}\label{fig:corr_kallisto}
 \end{figure}
 
-Similarly, we can reference the unsubdivided figure using \ref{figured_out}.
+\subsection{Bowtie2}
 
-\section{Code Example}
+For the Bowtie2 alignment we analysed how many reads were mapped once, multiple times or were 
+not aligned at all. All replicates showed similar ratios. 
+The mapping of the reads of Bowtie2 is shown in figure~\ref{fig:bar_bowtie}
 
-The results of the study include the generated data, outcomes of statistical tests, and visual evaluations such as plant leaf imagery. This section focuses on presenting these results objectively without interpretation. Incremental values can be depicted using tables and figures where necessary.
+\begin{figure}[H]
+  \center
+  \includegraphics[width=0.7\textwidth]{6_3_bowtie_alignment_bar.pdf}
+  \caption{Mapping of the reads of the Bowtie2 alignment}\label{fig:bar_bowtie}
+\end{figure}
 
-Below is an example of how to insert an algorithm in LaTeX:
+\subsection{Comparison Kallisto and Bowtie2}
+The distribution of the TPM values obtained by Kallisto and Bowtie2 were similar. 
+The Bowtie2 results also showed slightly lower median for the control group.
+For both programs and for both conditions the log fold changes have been calculated 
+and the distribution was plotted in figure~\ref{fig:dist_lfc}.
+The distribution of TPM values looks comparable between the programs. S shift to the positive 
+log fold changes can be seen. 
 
-\begin{algorithm}[H]
+\begin{figure}[H]
+  \center
+  \includegraphics[width=0.7\textwidth]{6_post_all_lfc_density.pdf}
+  \caption{Grouped box plots of the three biological replicates per group}\label{fig:dist_lfc}
+\end{figure}
 
-\KwData{
-\begin{itemize}
-    \item $g$: The GO term to compute the mutation probability lookup table for.
-    \item $\mathcal{H}$: The \emph{ordered} set of homologous protein pairs $p_i$, where\\
-    \hspace{1cm} at least one member has annotation $g$,\\
-    \hspace{1cm} with $\mathcal{G}_x$ as the set of GO term annotations of protein $x$: \\
-    \hspace{1cm} $p_i = \{ \, p_i^1, p_i^2 ~ | ~ \exists ~ k \in \{1,2\} : g \in \mathcal{G}_{p_i^k} \, \}$, and\\
-    \hspace{1cm} each pair $p_i$ has a sequence distance $d_i$ such that: $d_{i-1} \leq d_i$.
-\end{itemize}
-}
-\KwResult{
-\begin{itemize}
-    \item $M$: Ordered set of mutation probabilities $P( \, g^{mut} \,|\, d_k \,)$, with\\
-    \hspace{1cm} $m_{k-1} \leq m_k$ for $d_{k-1} \leq d_k$.
-\end{itemize}
-}
+\section{Weighted Gene Co-expression Network Analysis}
 
-\BlankLine
-\textbf{Initialize:}\\
-$n_{not\_sharing} \leftarrow 0$\\
-$n_{all} \leftarrow 0$\\
-$m_{candidate} \leftarrow 0$\\
-$m_{current} \leftarrow 0$\\
-\BlankLine
+The word cloud generated for the genes in the significant module is shown in figure~\ref{fig:worcloud_wgcna}
 
-\ForEach{$p_i \in \mathcal{H}$, $1 \leq i \leq |\mathcal{H}|$}{
-    Increment $n_{all}$ by 1.\\
-    \If{$\exists ~ k \in \{1,2\} : g \notin \mathcal{G}_{p_i^k}$}{
-        Increment $n_{not\_sharing}$ by 1.\\
-    }
-    $m_{candidate} \leftarrow \frac{n_{not\_sharing}}{n_{all}}$\\
-    \If{$m_{candidate} > m_{current}$}{
-        $m_{current} \leftarrow m_{candidate}$\\
-        Append $m_{current}$ to $M$.\\
-    }
-}
-\caption{Mutation Probability Lookup Algorithm}
-\label{alg:mutation_lookup}
-\end{algorithm}
+\begin{figure}[H]
+  \center
+  \includegraphics[width=0.7\textwidth]{10_6_wordcloud_me2.pdf}
+  \caption{Word Cloud for the Module Eigengen 2}\label{fig:worcloud_wgcna}
+\end{figure}
+
+\section{Differential Gene Expression}
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth} 
+        \centering
+        \includegraphics[width=\textwidth]{11_edgeR_venn_diagram_cn1.pdf} 
+        \caption{}
+        \label{fig:venn_edgeR_1}
+    \end{subfigure}
+    \hfill % Horizontal space between subfigures
+    % Second subfigure
+    \begin{subfigure}[b]{0.45\textwidth} % Adjust width as needed
+        \centering
+        \includegraphics[width=\textwidth]{11_edgeR_venn_diagram_cn2.pdf} % Replace with your image
+        \caption{}
+        \label{fig:venn_edgeR_2}
+    \end{subfigure}
+    \caption{Caption for the entire figure.}
+    \label{fig:venn_edgeR}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth} 
+        \centering
+        \includegraphics[width=\textwidth]{11_edgeR_volcano_con1.pdf} 
+        \caption{}
+        \label{fig:vol_edgeR_1}
+    \end{subfigure}
+    \hfill % Horizontal space between subfigures
+    % Second subfigure
+    \begin{subfigure}[b]{0.45\textwidth} % Adjust width as needed
+        \centering
+        \includegraphics[width=\textwidth]{11_edgeR_volcano_con2.pdf} % Replace with your image
+        \caption{}
+        \label{fig:vol_edgeR_2}
+    \end{subfigure}
+    \caption{Caption for the entire figure.}
+    \label{fig:vol_edgeR}
+\end{figure}
+
+\begin{figure}[H]
+  \center
+  \includegraphics[width=0.7\textwidth]{11_voom_plot1.png}
+  \caption{Voom plot}\label{fig:voom}
+\end{figure}
 
 
-\section{Example of using a reference to another section}
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth} 
+        \centering
+        \includegraphics[width=\textwidth]{11_limma_venn_diagram_cn1.pdf} 
+        \caption{}
+        \label{fig:venn_limma_1}
+    \end{subfigure}
+    \hfill % Horizontal space between subfigures
+    % Second subfigure
+    \begin{subfigure}[b]{0.45\textwidth} % Adjust width as needed
+        \centering
+        \includegraphics[width=\textwidth]{11_limma_venn_diagram_cn2.pdf} % Replace with your image
+        \caption{}
+        \label{fig:venn_limma_2}
+    \end{subfigure}
+    \caption{Caption for the entire figure.}
+    \label{fig:venn_limma}
+\end{figure}
 
-This is a reference example. To reference the code example above, simply use \\
-\verb|\ref{alg:mutation_lookup}| \ref{alg:mutation_lookup}.
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth} 
+        \centering
+        \includegraphics[width=\textwidth]{11_limma_volcano_con1.pdf} 
+        \caption{}
+        \label{fig:vol_limma_1}
+    \end{subfigure}
+    \hfill % Horizontal space between subfigures
+    % Second subfigure
+    \begin{subfigure}[b]{0.45\textwidth} % Adjust width as needed
+        \centering
+        \includegraphics[width=\textwidth]{11_limma_volcano_con2.pdf} % Replace with your image
+        \caption{}
+        \label{fig:vol_limma_2}
+    \end{subfigure}
+    \caption{Caption for the entire figure.}
+    \label{fig:vol_limma}
+\end{figure}
 
-Find more information about the materials in section \ref{Topics_of_Material} \\
-(\verb|\ref{Topics_of_Material}|) on page \pageref{Topics_of_Material}
-(\verb|\pageref{Topics_of_Material}|).
+\begin{figure}[H]
+    \centering
+    % Top-left subfigure
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{11_edgeR_top_positive_genes_expression_by_condition1.png} % Replace with your image
+        \caption{}
+        \label{fig:pos_edger_1}
+    \end{subfigure}
+    \hfill
+    % Top-right subfigure
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{11_edgeR_top_positive_genes_expression_by_condition2.png} % Replace with your image
+        \caption{}
+        \label{fig:pos_edger_2}
+    \end{subfigure}
+    \vskip\baselineskip % Vertical space between rows
+    % Bottom-left subfigure
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{11_edgeR_top_negative_genes_expression_by_condition1.png} % Replace with your image
+        \caption{}
+        \label{fig:neg_edger_1}
+    \end{subfigure}
+    \hfill
+    % Bottom-right subfigure
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{11_edgeR_top_negative_genes_expression_by_condition1.png} % Replace with your image
+        \caption{}
+        \label{fig:neg_edger_2}
+    \end{subfigure}
+    % Overall figure caption
+    \caption{Results from the four experiments: (a) First experiment, (b) Second experiment, (c) Third experiment, (d) Fourth experiment.}
+    \label{fig:top_edger}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    % Top-left subfigure
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{11_edgeR_wordcloud_cn1_up.pdf} % Replace with your image
+        \caption{}
+        \label{fig:wc_pos_edger_1}
+    \end{subfigure}
+    \hfill
+    % Top-right subfigure
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{11_edgeR_wordcloud_cn2_up.pdf} % Replace with your image
+        \caption{}
+        \label{fig:wc_pos_edger_2}
+    \end{subfigure}
+    \vskip\baselineskip % Vertical space between rows
+    % Bottom-left subfigure
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{11_edgeR_wordcloud_cn1_down.pdf} % Replace with your image
+        \caption{}
+        \label{fig:wc_neg_edger_1}
+    \end{subfigure}
+    \hfill
+    % Bottom-right subfigure
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{11_edgeR_wordcloud_cn2_down.pdf} % Replace with your image
+        \caption{}
+        \label{fig:wc_neg_edger_2}
+    \end{subfigure}
+    % Overall figure caption
+    \caption{Results from the four experiments: (a) First experiment, (b) Second experiment, (c) Third experiment, (d) Fourth experiment.}
+    \label{fig:wc_top_edger}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    % Top-left subfigure
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{11_top_positive_genes_expression_by_condition1_limma.png} % Replace with your image
+        \caption{}
+        \label{fig:pos_limma_1}
+    \end{subfigure}
+    \hfill
+    % Top-right subfigure
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{11_top_positive_genes_expression_by_condition2_limma.png} % Replace with your image
+        \caption{}
+        \label{fig:pos_limma_2}
+    \end{subfigure}
+    \vskip\baselineskip % Vertical space between rows
+    % Bottom-left subfigure
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{11_top_negative_genes_expression_by_condition1_limma.png} % Replace with your image
+        \caption{}
+        \label{fig:neg_limma_1}
+    \end{subfigure}
+    \hfill
+    % Bottom-right subfigure
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{11_top_negative_genes_expression_by_condition2_limma.png} % Replace with your image
+        \caption{}
+        \label{fig:neg_limma_2}
+    \end{subfigure}
+    % Overall figure caption
+    \caption{Results from the four experiments: (a) First experiment, (b) Second experiment, (c) Third experiment, (d) Fourth experiment.}
+    \label{fig:top_limma}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    % Top-left subfigure
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{11_limma_wordcloud_cn1_up.pdf} % Replace with your image
+        \caption{}
+        \label{fig:wc_pos_limma_1}
+    \end{subfigure}
+    \hfill
+    % Top-right subfigure
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{11_limma_wordcloud_cn2_up.pdf} % Replace with your image
+        \caption{}
+        \label{fig:wc_pos_limma_2}
+    \end{subfigure}
+    \vskip\baselineskip % Vertical space between rows
+    % Bottom-left subfigure
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{11_limma_wordcloud_cn1_down.pdf} % Replace with your image
+        \caption{}
+        \label{fig:wc_neg_limma_1}
+    \end{subfigure}
+    \hfill
+    % Bottom-right subfigure
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{11_wordcloud_cn2_down.pdf} % Replace with your image
+        \caption{}
+        \label{fig:wc_neg_limma_2}
+    \end{subfigure}
+    % Overall figure caption
+    \caption{Results from the four experiments: (a) First experiment, (b) Second experiment, (c) Third experiment, (d) Fourth experiment.}
+    \label{fig:wc_top_limma}
+\end{figure}
+
+
