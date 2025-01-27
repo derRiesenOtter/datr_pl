@@ -72,3 +72,11 @@ YER152W-A -6.016711 -3.751088 -3.485064 0.0066067490 0.0069694309 -2.657947
 YGL239C   Significant   YGL239C
 YGL152C   Significant   YGL152C
 YER152W-A Significant YER152W-A
+[1] "Jaccard similarity coefficient for up regulated genes in condition 1:"
+[1] 0
+[1] "Jaccard similarity coefficient for up regulated genes in condition 2:"
+[1] 0
+[1] "Jaccard similarity coefficient for down regulated genes in condition 1:"
+[1] 0.4814815
+[1] "Jaccard similarity coefficient for down regulated genes in condition 2:"
+[1] 0.1764706

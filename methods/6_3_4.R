@@ -76,9 +76,9 @@ abundance_long <- bind_rows(abundance_list)
 kallisto_boxplot <- ggplot(abundance_long, aes(x = group, y = log(tpm + 1), fill = interaction(replicate, group))) +
   geom_boxplot() +
   theme_minimal() +
-  scale_fill_brewer(palette = "Set1") +
-  labs(y = "log(TPM + 1)") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  scale_fill_brewer(palette = "Dark2") +
+  labs(y = "log(TPM + 1)", x = "Condition") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "none")
 
 ggsave("../results/6_3_kallisto_boxplot.pdf", device = "pdf", plot = kallisto_boxplot)
 
@@ -96,7 +96,7 @@ corrplot(cor_matrix,
   type = "full",
   order = "hclust",
   hclust.method = "ward.D2",
-  addrect = 5,
+  addrect = 3,
   tl.col = "black"
 )
 dev.off()
@@ -163,7 +163,7 @@ bowtie_alignments_long <- bowtie_alignments %>%
 
 bowtie_alignment_bar <- ggplot(bowtie_alignments_long, aes(x = names, y = alignments, fill = category)) +
   geom_bar(stat = "identity") +
-  scale_fill_brewer(palette = "Set1") +
+  scale_fill_brewer(palette = "Dark2") +
   theme_minimal() +
   labs(x = "Replicate", y = "Number of Sequences") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
@@ -238,7 +238,7 @@ all_tpm_boxplot <- ggplot(data = tpm_all, aes(x = interaction(group, algorithm),
   geom_boxplot() +
   labs(x = "Gene expression per condition and algorithm", y = expression("log(TPM + 1)")) +
   theme_minimal() +
-  scale_fill_brewer(palette = "Set1") +
+  scale_fill_brewer(palette = "Dark2") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 ggsave("../results/6_post_all_tpm_boxplot.pdf", plot = all_tpm_boxplot, device = "pdf")
@@ -261,9 +261,9 @@ tpm_all_lfc_long <- tpm_all_lfc %>%
 
 density_lfc <- ggplot(tpm_all_lfc_long, aes(x = value, fill = interaction(name, algorithm))) +
   geom_density(alpha = 0.3) +
-  labs(x = "TPM", fill = "Legend") +
+  labs(x = "LFC", fill = "Legend") +
   xlim(-8, 8) +
-  scale_fill_brewer(palette = "Set1") +
+  scale_fill_brewer(palette = "Dark2") +
   theme_minimal()
 
 ggsave("../results/6_post_all_lfc_density.pdf", plot = density_lfc, device = "pdf")

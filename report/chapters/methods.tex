@@ -23,6 +23,7 @@ The programs and versions listet in table \ref{tab:programs} were used for the a
 		slurm-wlm          & 21.08.5 & Ubuntu \\
 		Trimmomatic   & 0.39         & Ubuntu \\
     bash          & 5.2.37    & MacOS    \\
+    R & 4.4.2 & MacOS \\
     ggVennDiagram             & 1.5.2  & MacOS       \\
     ggplot2           &   3.5.1   & MacOS   \\
     wordcloud            &   2.6  & MacOS    \\
@@ -61,21 +62,19 @@ genes relative to the total in the transcriptome. Furthermore, we also analysed 
 calculated the Correlation between the samples.
 For bowtie2 we also calculated the percentage of aligned reads as well as analysed the
 alignment quality statistics.
-For both methods we extracted the TPM values on a gene basis and compared them. 
-We then calculated the log fold change for the TPM values and also compared them between the 
+For both methods we extracted the \gls{tpm} values on a per-gene basis and compared them. 
+We then calculated the log fold change for the \gls{tpm} values and also compared them between the 
 methods.
 
-\section{Weighted Gene Co-expression Network Analysis}
-Using the results of the Kallisto gene expression quantification we performed a Weighted Gene 
-Co-expression Network Analysis to construct a gene network and identify modules of high 
+\section{WGCNA}
+Using the results of the Kallisto gene expression quantification we performed a \gls{wgcna} to construct a gene network and identify modules of high 
 correlation. We also identified gene modules showing significant correlations with
-heat-shock conditions and created Wordclouds using the Gene Ontology Term Annotations. 
+heat-shock conditions and created a Wordcloud using the Gene Ontology Term Annotations. 
 
 
 \section{Differential Gene Expression}
 For the differential gene expression analysis we also used the results of Kallisto.
-We conducted this analysis with edgeR as well as Limma with the voom normalisation. 
+We conducted this analysis with edgeR as well as Limma (with the voom normalisation). 
 We identified increased and decreased genes in these differentially expressed gene 
-and again created word clouds. We higlighted the three most extremely changed genes 
-in bar charts. 
+and again created word clouds. 
 

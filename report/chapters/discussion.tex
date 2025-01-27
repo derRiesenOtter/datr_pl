@@ -1,1 +1,35 @@
 \chapter{Discussion}
+
+\section{Genetic Response to Heat Shock in Yeast}
+
+The yeast \textit{Saccharomyces cerevisiae} responds to heat shock 
+through significant changes in gene expression. Heat shock predominantly 
+upregulated genes involved in protein folding and stress response, 
+such as chaperones or components crucial for ribosomal activity, 
+while downregulated genes were often associated 
+with retrotransposons and certain dubious open reading frames. Up regulation 
+generally occured more often and stronger.
+
+\section{Clusters of Genes and Their Functions}
+
+Weighted Gene \gls{wgcna} identified 
+one significant gene module correlating with heat shock conditions. 
+Using a word cloud it was possible to get a overview of functions 
+of the genes within this cluster. Important keywords such as transcription, 
+synthase or polymerase hint at a strong relation of this cluster with 
+the creation of new proteins.
+
+\section{Comparison of Tools and Agreement of Results}
+
+Gene expression quantification using Kallisto and Bowtie2 yielded 
+comparable TPM distributions, with both methods indicating higher 
+expression levels under heat shock conditions. However, discrepancies 
+arose in identifying significantly altered genes, as evidenced by Jaccard 
+similarity coefficients (0.60 and 0.40 for conditions 1 and 2, 
+respectively). Differential expression analysis also highlighted 
+differences: Limma (with voom normalization) exhibited a broader 
+detection of high log-fold changes compared to EdgeR, which identified 
+fewer but more symmetric log-fold changes. The absent overlap in identified 
+upregulated genes but moderate agreement for downregulated genes 
+(Jaccard coefficients of 0.48 and 0.18 for conditions 1 and 2) underscores 
+the variability introduced by different analytical pipelines. 

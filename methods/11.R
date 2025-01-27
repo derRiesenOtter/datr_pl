@@ -87,7 +87,7 @@ edgeR_volcano_con1 <- ggplot(data = res_cond1, aes(x = logFC, y = -log10(PValue)
   theme_minimal() +
   labs(
     x = "logFC",
-    y = expression(-log[10](PValue)),
+    y = "-log(PValue)",
     color = "Significance"
   )
 ggsave("11_edgeR_volcano_con1.pdf", plot = edgeR_volcano_con1, device = "pdf", path = "../results")
@@ -98,7 +98,7 @@ edgeR_volcano_con2 <- ggplot(data = res_cond2, aes(x = logFC, y = -log10(PValue)
   theme_minimal() +
   labs(
     x = "logFC",
-    y = expression(-log[10](PValue)),
+    y = "-log(PValue)",
     color = "Significance"
   )
 ggsave("11_edgeR_volcano_con2.pdf", plot = edgeR_volcano_con2, device = "pdf", path = "../results")
@@ -148,6 +148,11 @@ top_up_cn1 <- head(res_cond1[order(res_cond1$logFC, decreasing = TRUE), ], 20)
 top_up_cn2 <- head(res_cond2[order(res_cond2$logFC, decreasing = TRUE), ], 20)
 top_down_cn1 <- head(res_cond1[order(res_cond1$logFC, decreasing = FALSE), ], 20)
 top_down_cn2 <- head(res_cond2[order(res_cond2$logFC, decreasing = FALSE), ], 20)
+
+top_up_cn1_edgeR <- row.names(top_up_cn1)
+top_up_cn2_edgeR <- row.names(top_up_cn2)
+top_down_cn1_edgeR <- row.names(top_down_cn1)
+top_down_cn2_edgeR <- row.names(top_down_cn2)
 
 go_annotations <- read_delim("../material/go_annotations", skip = 4, col_names = FALSE)
 
@@ -536,7 +541,7 @@ limma_volcano_con1 <- ggplot(data = control_vs_condition1_voom, aes(x = logFC, y
   theme_minimal() +
   labs(
     x = "logFC",
-    y = "-log10(PValue)",
+    y = "-log(PValue)",
     color = "Significance"
   )
 ggsave("11_limma_volcano_con1.pdf", plot = limma_volcano_con1, device = "pdf", path = "../results")
@@ -547,7 +552,7 @@ limma_volcano_con2 <- ggplot(data = control_vs_condition2_voom, aes(x = logFC, y
   theme_minimal() +
   labs(
     x = "logFC",
-    y = "-log10(PValue)",
+    y = "-log(PValue)",
     color = "Significance"
   )
 ggsave("11_limma_volcano_con2.pdf", plot = limma_volcano_con2, device = "pdf", path = "../results")
@@ -596,7 +601,13 @@ limma_res_cond2_dec <- row.names(control_vs_condition2_voom[control_vs_condition
 top_up_cn1 <- head(control_vs_condition1_voom[order(control_vs_condition1_voom$logFC, decreasing = TRUE), ], 20)
 top_up_cn2 <- head(control_vs_condition2_voom[order(control_vs_condition2_voom$logFC, decreasing = TRUE), ], 20)
 top_do_cn1 <- head(control_vs_condition1_voom[order(control_vs_condition1_voom$logFC, decreasing = FALSE), ], 20)
-top_do_cn2 <- head(control_vs_condition2_voom[order(control_vs_condition1_voom$logFC, decreasing = FALSE), ], 20)
+top_do_cn2 <- head(control_vs_condition2_voom[order(control_vs_condition2_voom$logFC, decreasing = FALSE), ], 20)
+
+top_up_cn1_limma <- row.names(top_up_cn1)
+top_up_cn2_limma <- row.names(top_up_cn2)
+top_down_cn1_limma <- row.names(top_do_cn1)
+top_down_cn2_limma <- row.names(top_do_cn2)
+
 
 top_up_cn1_desc <- subset(go_annotations, gene_id %in% rownames(top_up_cn1))
 top_up_cn2_desc <- subset(go_annotations, gene_id %in% rownames(top_up_cn2))
@@ -898,3 +909,18 @@ ggsave("../results/11_top_negative_genes_expression_by_condition2_limma.png",
   plot = p,
   width = 10, height = 8, dpi = 300
 )
+
+# jaccard sim
+jacc_up_cn1 <- length(intersect(top_up_cn1_edgeR, top_up_cn1_limma)) / length(union(top_up_cn1_edgeR, top_up_cn1_limma))
+jacc_up_cn2 <- length(intersect(top_up_cn2_edgeR, top_up_cn2_limma)) / length(union(top_up_cn2_edgeR, top_up_cn2_limma))
+jacc_do_cn1 <- length(intersect(top_down_cn1_edgeR, top_down_cn1_limma)) / length(union(top_down_cn1_edgeR, top_down_cn1_limma))
+jacc_do_cn2 <- length(intersect(top_down_cn2_edgeR, top_down_cn2_limma)) / length(union(top_down_cn2_edgeR, top_down_cn2_limma))
+
+print("Jaccard similarity coefficient for up regulated genes in condition 1:")
+print(jacc_up_cn1)
+print("Jaccard similarity coefficient for up regulated genes in condition 2:")
+print(jacc_up_cn2)
+print("Jaccard similarity coefficient for down regulated genes in condition 1:")
+print(jacc_do_cn1)
+print("Jaccard similarity coefficient for down regulated genes in condition 2:")
+print(jacc_do_cn2)

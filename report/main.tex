@@ -16,7 +16,7 @@
 \usepackage{algorithmic}
 \usepackage{amsmath}
 \usepackage{float}
-% \usepackage[acronym]{glossaries}
+\usepackage[acronym]{glossaries}
 \usepackage{subcaption} % praktisch, wenn man eine Grafik aus zwei Grafiken oder mehr macht
 
 %Setting counters for citations, tables and figures
@@ -27,11 +27,10 @@
 \counterwithout{figure}{chapter} % Figures werden absolut gezaehlt und nicht nach Kapitel
 \counterwithout{table}{chapter} % Tables werden absolut gezaehlt und nicht nach Kapitel
 
+\makeglossaries
 
-
-% \makeglossaries
-
-% \newacronym{iCn3D}{iCn3D}{I see in 3D} 
+\newacronym{wgcna}{WGCNA}{Weighted Gene Co-expression Network Analysis} 
+\newacronym{tpm}{TPM}{Transcripts Per Million} 
 
 
 \begin{document}
@@ -42,6 +41,7 @@
 	\listoffigures
 	\listoftables
 	\tableofcontents
+  \printglossaries
 	\cleardoublepage
 	
 	\setcounter{savepage}{\arabic{page}} 
