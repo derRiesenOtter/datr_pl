@@ -14,8 +14,8 @@ FastQC.
 \section{Gene Expression Quantification}
 \subsection{Kallisto}
 For each replicate around ten thousand (mean of 10622) of the 11599 trancripts have 
-been found. This corresponds to over 90 percent. The \gls{tpm} values between the samples were comparable
-between the samples. The control condition had slightly lower median values (between 9 and 12) compared to 
+been found. This corresponds to over 90 percent. The \gls{tpm} values between the samples were comparable. 
+The control condition had slightly lower median values (between 9 and 12) compared to 
 condition 1 (between 15 and 16) and condition 2 (between 14 and 18). 
 They ranged between 0 and 86654.40. To visualize them the $log(TPM+1)$ was used, see
 Figure~\ref{fig:box_kallisto}.
@@ -53,11 +53,11 @@ The mapping of the reads of Bowtie2 is shown in Figure~\ref{fig:bar_bowtie}
 \end{figure}
 
 \subsection{Comparison Kallisto and Bowtie2}
-The distribution of the \gls{tpm} values obtained by Kallisto and Bowtie2 were similar. 
+The distributions of the \gls{tpm} values obtained by Kallisto and Bowtie2 were similar. 
 The Bowtie2 results also showed a slightly lower median for the control group.
 For both programs and for both conditions the log-fold changes have been calculated 
 and the distribution was plotted in Figure~\ref{fig:dist_lfc}.
-The distribution of gls{tpm} values looks comparable between the programs. A shift towards positive 
+The distribution of \gls{tpm} values looks comparable between the programs. A shift towards positive 
 log-fold changes can be seen. 
 
 \begin{figure}[H]
@@ -142,7 +142,7 @@ towards positive and higher log-fold changes.
 
 Jaccard similarity between edgeR and limma was calculated for the top twenty up and down regulated genes. No overlap 
 was found for the up regulated genes. However, this was not the case for the down regulated genes.
-For condition 1 a Jaccard similarity coefficient of 0.48 was calculated, for condition 2 a Jaccard 
+For condition 1, a Jaccard similarity coefficient of 0.48 was calculated, for condition 2, a Jaccard 
 similarity coefficient of 0.18 was calculated.
 
 \subsection{Differentially expressed genes}
